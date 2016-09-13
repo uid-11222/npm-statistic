@@ -1,0 +1,33 @@
+{
+  "name": "npm-statistic",
+  "version": "0.1.0",
+  "description": "Get npm package statistic and save to JSON files.",
+  "main": "src/npm-statistic.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha ./test/test.js"
+  },
+  "keywords": [
+    "npm",
+    "api",
+    "stat",
+    "stats",
+    "statistic"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^3.0.0"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "author": "uid-11222",
+  "bugs": {
+    "url": "https://github.com/uid-11222/npm-statistic/issues"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/uid-11222/npm-statistic",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uid-11222/npm-statistic"
+  }
+}
