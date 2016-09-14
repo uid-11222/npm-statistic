@@ -69,7 +69,70 @@ const readJSON = name => {
   } catch(e) { return null; }
 };
 
+const hasOwn = COMMANDS.hasOwnProperty;
 
+/**
+ * Get JSON part by keys array.
+ * @param  {Object} json
+ * @param  {string[]} keys
+ * @return {*} json[key[0]][key[1]]...
+ */
+const getJsonPart = (json, keys) => {
+  let value = json, key;
+  for (key of keys) {
+    if (value && hasOwn.call(value, key)) {
+      value = value[key];
+    } else {
+      return undefined;
+    }
+  }
+  return value;
+}
+
+/**
+ * Get config parts.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[GET] = (args, config) => {
+
+  const keys = args[0] === undefined ? [] : args[0].split('.');
+
+  console.log(JSON.stringify(getJsonPart(config, keys)));
+
+};
+
+/**
+ * Set config parts.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[SET] = (args, config) => {
+
+  if (args.length < 2) {
+    console.log(`Not enough args.`);
+    return;
+  }
+
+  const keys = args[0].split('.'),
+        key = keys.pop(),
+        obj = getJsonPart(config, keys);
+
+  if (!obj || typeof obj !== 'object') {
+    console.log(`Cannot set key "${key}" in "${keys.join('.')}".`);
+    return;
+  }
+
+  let value;
+  try {
+    value = JSON.parse(args[1]);
+  } catch(e) {
+    value = args[1];
+  }
+
+  obj[key] = value;
+  writeJSON(CONFIG, config);
+};
 
 /**
  * If called from command line, execute with it args.
