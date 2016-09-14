@@ -135,6 +135,82 @@ COMMANDS[SET] = (args, config) => {
 };
 
 /**
+ * Update statistics for packages from config.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[UPDATE] = (args, config) => {
+
+  const packages = config.packages || [],
+        names = packages.map(pack => pack.name);
+
+  for (const name of names) {
+    updatePackage(name);
+  }
+
+};
+
+/**
+ * Errors logger.
+ * @param {Error} error
+ */
+const logError = error => {
+  console.log(`Got error: ${error.message}`);
+};
+
+/**
+ * Update statistic of package by name.
+ * @param {string} name Package name.
+ */
+const updatePackage = name => {
+
+  http.get(`https://www.npmjs.com/package/${name}`, updateCallback)
+      .on(`error`, logError);
+
+};
+
+/**
+ * Callback for getting update response.
+ * @param {ServerResponse} res
+ */
+const updateCallback = res => {
+
+  const pack = parseRes(res),
+        statName = STATS + getStatName();
+
+  try {
+    fs.accessSync(statName);
+  } catch(e) {
+    writeJSON(statName, {packages: []});
+  }
+
+  const stat = readJSON(statName),
+        packages = stat.packages;
+
+};
+
+/**
+ * Parse update response object to package object.
+ * @param  {ServerResponse} res Update response object.
+ * @return {Object} Parsed package.
+ */
+const parseRes = res => {
+
+  return {name: `next-task`};
+};
+
+const getStatName = () => {
+
+  const now = new Date(),
+        year = now.getFullYear();
+
+  let month = now.getMonth() + 1;
+  if (month < 10) month = '0' + month;
+
+  return `${month}.${year}.json`;
+};
+
+/**
  * If called from command line, execute with it args.
  */
 if (require.main && require.main.id === module.id) {
