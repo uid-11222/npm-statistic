@@ -3,9 +3,14 @@
 'use strict'; /* globals process */
 
 const fs = require('fs'),
-      http = require('http');
+      https = require('https'),
+      util = require('util');
 
 const UPDATE = `update`, SET = `set`, GET = `get`;
+
+const DATE = `date`;
+
+const TIMEOUT = 8192;
 
 const CONFIG = `config.json`, STATS = `./stats/`;
 
@@ -98,7 +103,7 @@ COMMANDS[GET] = (args, config) => {
 
   const keys = args[0] === undefined ? [] : args[0].split('.');
 
-  console.log(JSON.stringify(getJsonPart(config, keys)));
+  console.log(util.inspect(getJsonPart(config, keys)));
 
 };
 
@@ -158,14 +163,19 @@ const logError = error => {
   console.log(`Got error: ${error.message}`);
 };
 
+const timeOut = () => {
+  console.log(`Request close, timeout (${TIMEOUT} ms).`);
+};
+
 /**
  * Update statistic of package by name.
  * @param {string} name Package name.
  */
 const updatePackage = name => {
 
-  http.get(`https://www.npmjs.com/package/${name}`, updateCallback)
-      .on(`error`, logError);
+  https.get(`https://www.npmjs.com/package/${name}`, getCallback)
+       .on(`error`, logError)
+       .setTimeout(TIMEOUT, timeOut);
 
 };
 
@@ -173,10 +183,34 @@ const updatePackage = name => {
  * Callback for getting update response.
  * @param {ServerResponse} res
  */
-const updateCallback = res => {
+const getCallback = res => {
+  res.setEncoding('utf8')
+     .on(`error`, logError);
 
-  const pack = parseRes(res),
-        statName = STATS + getStatName();
+  let source = '';
+
+  res.on(`data`, data => source += data)
+     .on(`end`, () => {
+        updateCallback(source, res.statusCode);
+     });
+};
+
+/**
+ * Callback for getting response data.
+ * @param {string} source
+ * @param {number} status
+ */
+const updateCallback = (source, status) => {
+
+  const pack = parseRes(source, status),
+        dir = STATS + pack.name + '/',
+        statName = dir + getStatName();
+
+  try {
+    fs.accessSync(dir);
+  } catch(e) {
+    fs.mkdirSync(dir);
+  }
 
   try {
     fs.accessSync(statName);
@@ -185,18 +219,61 @@ const updateCallback = res => {
   }
 
   const stat = readJSON(statName),
-        packages = stat.packages;
+        packages = stat.packages,
+        len = packages.length,
+        last = packages[len - 1],
+        preLast = packages[len - 2],
+        curDate = Date.now();
+
+  if (jsonsAreEqual(pack, last, DATE) &&
+      jsonsAreEqual(pack, preLast, DATE)) {
+    last[DATE] = curDate;
+  } else {
+    packages.push(pack);
+  }
+
+  writeJSON(statName, stat);
 
 };
 
 /**
- * Parse update response object to package object.
- * @param  {ServerResponse} res Update response object.
+ * Compare of flat jsons.
+ * @param  {*} a
+ * @param  {*} b
+ * @param  {string} skip Skip keys with this name.
+ * @return {boolean} true, if a and has same key-value pairs.
+ */
+const jsonsAreEqual = (a, b, skip) => {
+
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return false;
+  if (!a || !b) return false;
+
+  const keys = Object.keys(a).concat(Object.keys(b));
+
+  for (const key of keys) {
+    if (key !== skip && a[key] !== b[key]) return false;
+  }
+
+  return true;
+};
+
+/**
+ * Parse update response source to package object.
+ * @param {string} source
+ * @param {number} status
  * @return {Object} Parsed package.
  */
-const parseRes = res => {
+const parseRes = (source, status) => {
 
-  return {name: `next-task`};
+  const date = Date.now();
+
+  const name = `next-task`;
+
+  console.log(`Update "${name}" statistic.`);
+
+  return { name, date, status, source: source.slice(-256) };
 };
 
 const getStatName = () => {
