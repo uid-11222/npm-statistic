@@ -8,8 +8,6 @@ const fs = require('fs'),
 
 const UPDATE = `update`, SET = `set`, GET = `get`;
 
-const DATE = `date`;
-
 const TIMEOUT = 8192;
 
 const CONFIG = `config.json`, STATS = `./stats/`;
@@ -225,9 +223,9 @@ const updateCallback = (source, status) => {
         preLast = packages[len - 2],
         curDate = Date.now();
 
-  if (jsonsAreEqual(pack, last, DATE) &&
-      jsonsAreEqual(pack, preLast, DATE)) {
-    last[DATE] = curDate;
+  if (jsonsAreEqual(pack, last, `date`) &&
+      jsonsAreEqual(pack, preLast, `date`)) {
+    last.date = curDate;
   } else {
     packages.push(pack);
   }
@@ -267,13 +265,20 @@ const jsonsAreEqual = (a, b, skip) => {
  */
 const parseRes = (source, status) => {
 
-  const date = Date.now();
+  const pack = { date: Date.now(), status };
 
-  const name = `next-task`;
+  const packName = source.match(/\/package\/.+"/);
 
-  console.log(`Update "${name}" statistic.`);
+  if (!packName || !packName[0]) {
+    logError(pack.error = `Cannot find name.`);
+    return pack;
+  }
 
-  return { name, date, status, source: source.slice(-256) };
+  pack.name = packName[0].slice(9, -1);
+
+  console.log(`Update "${pack.name}" statistic.`);
+
+  return pack;
 };
 
 const getStatName = () => {
