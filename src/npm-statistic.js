@@ -9,7 +9,7 @@ const fs = require('fs'),
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, HELP = `help`;
 
-const TIMEOUT = 16384, RUN_DATE = new Date();
+const DEFAULT_TIMEOUT = 16384;
 
 const CONFIG = `config.json`, LOGS = `logs.txt`, STATS = `./stats/`;
 
@@ -59,7 +59,12 @@ const npmStatistic = module.exports = args => {
     return;
   }
 
-  COMMANDS[command](args, config);
+  const ctx = {
+    start: Date.now(),
+    left: Number(config.packages && config.packages.length)
+  };
+
+  COMMANDS[command](args, config, ctx);
 };
 
 
@@ -72,7 +77,7 @@ const logError = error => {
   const data = `Got error. ${error}`;
   console.log(data);
 
-  fs.appendFileSync(LOGS, `${RUN_DATE}. ${data}\n`);
+  fs.appendFileSync(LOGS, `${new Date()}. ${data}\n`);
 };
 
 /**
@@ -207,9 +212,8 @@ COMMANDS[ADD] = (args, config) => {
 /**
  * Show full statistics of package by name.
  * @param {string[]} args
- * @param {Object} config
  */
-COMMANDS[SHOW] = (args, config) => {
+COMMANDS[SHOW] = args => {
 
   if (args.length === 0) {
     console.log(`Package name missed.`);
@@ -242,10 +246,8 @@ COMMANDS[SHOW] = (args, config) => {
 
 /**
  * Show commands help.
- * @param {string[]} args
- * @param {Object} config
  */
-COMMANDS[HELP] = (args, config) => {
+COMMANDS[HELP] = () => {
   console.log(
 `npm-statistic get npm statistics for chosen packages and save to JSON.
 Commands:
@@ -267,8 +269,9 @@ update is a default command.`
  * Update statistics for packages from config.
  * @param {string[]} args
  * @param {Object} config
+ * @param {Object} ctx Context of concrete npmStatistic call.
  */
-COMMANDS[UPDATE] = (args, config) => {
+COMMANDS[UPDATE] = (args, config, ctx) => {
 
   const packages = config.packages;
 
@@ -278,7 +281,7 @@ COMMANDS[UPDATE] = (args, config) => {
   }
 
   for (const pack of packages) {
-    updatePackage(pack);
+    updatePackage(pack, config, ctx);
   }
 
 };
@@ -286,25 +289,32 @@ COMMANDS[UPDATE] = (args, config) => {
 /**
  * Update statistic of package by name.
  * @param {Object} pack Package object.
+ * @param {Object} config
+ * @param {Object} ctx Context of concrete npmStatistic call.
  */
-const updatePackage = pack => {
+const updatePackage = (pack, config, ctx) => {
 
   const name = pack.name,
+        timeout = Number(config.timeout) || DEFAULT_TIMEOUT,
         req = https
-          .get(`https://www.npmjs.com/package/${name}`, getCallback);
+          .get(
+            `https://www.npmjs.com/package/${name}`,
+            res => getCallback(res, ctx)
+          );
 
   req.on(`error`, logError)
-     .setTimeout(TIMEOUT, () => {
+     .setTimeout(timeout, () => {
        req.abort();
-       logError(`Request to "${name}" aborted by timeout (${TIMEOUT} ms).`);
+       logError(`Request to "${name}" aborted by timeout (${timeout} ms).`);
      });
 };
 
 /**
  * Callback for getting update response.
- * @param {ServerResponse} res
+ * @param {http.IncomingMessage} res
+ * @param {Object} ctx Context of concrete npmStatistic call.
  */
-const getCallback = res => {
+const getCallback = (res, ctx) => {
   res.setEncoding('utf8')
      .on(`error`, logError);
 
@@ -312,27 +322,31 @@ const getCallback = res => {
 
   res.on(`data`, data => source += data)
      .on(`end`, () => {
-        updateCallback(source, res.statusCode);
+        updateCallback(source, res.statusCode, ctx);
      });
 };
 
 /**
  * Get spent time (from run command) in seconds.
+ * @param {number} start Start time in ms.
  * @return {string}
  */
-const getSpentTime = () => ((Date.now() - RUN_DATE)/1000).toFixed(3);
+const getSpentTime = start => ((Date.now() - start)/1000).toFixed(3);
 
 /**
  * Callback for getting response data.
  * @param {string} source
  * @param {number} status
+ * @param {Object} ctx Context of concrete npmStatistic call.
  */
-const updateCallback = (source, status) => {
+const updateCallback = (source, status, ctx) => {
 
   const pack = parseRes(source, status);
 
   if (pack.name) {
-    console.log(`Update "${pack.name}" (${getSpentTime()} sec).`);
+    console.log(
+  `Update "${pack.name}" (${getSpentTime(ctx.start)} sec, ${--ctx.left} left).`
+    );
   } else {
     pack.name = NO_NAME;
   }

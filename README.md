@@ -60,6 +60,11 @@ Set JSON value of foo.bar field of config:
 ```bash
 $ npm-statistic set foo.bar {a: 2}
 ```
+For example, field "timeout" contain response timeout in milliseconds (default timeout is 16382):
+```bash
+$ npm-statistic set timeout 8000
+```
+Now timeout is 4 seconds.
 
 ### show ###
 Show month statistics of package by package name.
@@ -83,6 +88,8 @@ npm-statistic does all file system operations in synchronous mode (but statistic
 All errors are written to logs.txt in npm-statistic dir.
 
 You can run npm-statistic with any frequency, because if the package has not changed statistics, new records in the file does not occur (changes only the timestamp of the last update statistics). Therefore, the statistics file size is always limited by the number of changes in the statistics on package npm-page.
+
+If you add nonexistent package to config, npm-statistic saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
 
 ## Tests ##
 ```bash
