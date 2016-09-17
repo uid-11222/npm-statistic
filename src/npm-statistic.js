@@ -178,6 +178,8 @@ COMMANDS[SET] = (args, config) => {
 
   obj[key] = value;
   writeJSON(CONFIG, config);
+
+  console.log(`Set ${args[0]} = ${util.inspect(value)}.`);
 };
 
 /**
