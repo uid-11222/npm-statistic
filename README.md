@@ -5,10 +5,84 @@
   **npm-statistic** get npm stats for chosen packages and save to JSON. It's a console command for regularly invoke (by cron, for example).
 
 ## Usage ##
-You need a node version >=6.0.0. Install npm-statistic localy or global, then run command without arguments for saving current stats:
+You need a node version >=6.0.0. Install npm-statistic localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and stats/package-name/09.2016.json created automatically in npm-statistic dir).
+
+## Commands ##
+
+### add ###
+Add package (by package name) to config for regular updating his statistics:
+```bash
+$ npm-statistic add package-name
+```
+
+### update ###
+Default command. Update statistics for all packages from config. No arguments:
+```bash
+$ npm-statistic update
+```
+or 
 ```bash
 $ npm-statistic
 ```
+
+### get ###
+Get config (as JSON object) or his parts.
+
+Get full config:
+```bash
+$ npm-statistic get
+```
+Get foo field of config (as JSON object):
+```bash
+$ npm-statistic get foo
+```
+Get foo.bar field of config (as JSON object):
+```bash
+$ npm-statistic get foo.bar
+```
+For example, fiels "packages" contain array of all config packages:
+```bash
+$ npm-statistic get packages
+```
+First package:
+```bash
+$ npm-statistic get packages.0
+```
+
+### set ###
+Set config parts (as JSON object). Additional fields in the config file can be used to extend the functionality.
+
+Set string value of foo field of config:
+```bash
+$ npm-statistic set foo value
+```
+Set JSON value of foo.bar field of config:
+```bash
+$ npm-statistic set foo.bar {a: 2}
+```
+
+### show ###
+Show month statistics of package by package name.
+
+Show statistics of package for current month (if it is):
+```bash
+$ npm-statistic show package-name
+```
+
+Show statistics of package for custom month (if it is):
+```bash
+$ npm-statistic show package-name 10.2016
+```
+
+### help ###
+Show short help.
+
+## Details ##
+npm-statistic does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
+
+All errors are written to logs.txt in npm-statistic dir.
+
+You can run npm-statistic with any frequency, because if the package has not changed statistics, new records in the file does not occur (changes only the timestamp of the last update statistics). Therefore, the statistics file size is always limited by the number of changes in the statistics on package npm-page.
 
 ## Tests ##
 ```bash

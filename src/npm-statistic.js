@@ -6,9 +6,10 @@ const fs = require('fs'),
       https = require('https'),
       util = require('util');
 
-const UPDATE = `update`, SET = `set`, GET = `get`, ADD = `add`;
+const UPDATE = `update`, SET = `set`, GET = `get`,
+      ADD = `add`, SHOW = `show`, HELP = `help`;
 
-const TIMEOUT = 8192;
+const TIMEOUT = 16384, RUN_DATE = new Date();
 
 const CONFIG = `config.json`, LOGS = `logs.txt`, STATS = `./stats/`;
 
@@ -68,17 +69,10 @@ const npmStatistic = module.exports = args => {
  */
 const logError = error => {
 
-  const data = `Got error: ${error}`;
+  const data = `Got error. ${error}`;
   console.log(data);
 
-  try {
-    fs.accessSync(LOGS);
-  } catch(e) {
-    console.log(`${CANT} logs ("${LOGS}"). Create new empty log file.`);
-    fs.writeFileSync(LOGS, '');
-  }
-
-  fs.writeSync(LOGS, data);
+  fs.appendFileSync(LOGS, `${RUN_DATE}. ${data}\n`);
 };
 
 /**
@@ -119,6 +113,21 @@ const getJsonPart = (json, keys) => {
     }
   }
   return value;
+};
+
+/**
+ * Get statistic file name for current month.
+ * @return {string}
+ */
+const getStatName = () => {
+
+  const now = new Date(),
+        year = now.getFullYear();
+
+  let month = now.getMonth() + 1;
+  if (month < 10) month = '0' + month;
+
+  return `${month}.${year}`;
 };
 
 /**
@@ -196,6 +205,65 @@ COMMANDS[ADD] = (args, config) => {
 };
 
 /**
+ * Show full statistics of package by name.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[SHOW] = (args, config) => {
+
+  if (args.length === 0) {
+    console.log(`Package name missed.`);
+    return;
+  }
+
+  const name = args[0],
+        dir = STATS + name + '/';
+
+  try {
+    fs.accessSync(dir);
+  } catch(e) {
+    console.log(`No statistic for package "${name}".`);
+    return;
+  }
+
+  const month = args[1] ? args[1] : getStatName(),
+        statName = `${dir}${month}.json`;
+
+  try {
+    fs.accessSync(statName);
+  } catch(e) {
+    console.log(`No statistic for month ${month} for package "${name}".`);
+    return;
+  }
+
+  console.log(util.inspect(readJSON(statName)));
+
+};
+
+/**
+ * Show commands help.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[HELP] = (args, config) => {
+  console.log(
+`npm-statistic get npm statistics for chosen packages and save to JSON.
+Commands:
+  add package-name            add package to config for regular getting stats
+  update                      update statistics for all packages from config
+  get                         get full config (as JSON object)
+  get foo                     get foo field of config (as JSON object)
+  get foo.bar                 get foo.bar field of config (as JSON object)
+  set foo value               set string value of foo field of config
+  set foo.bar {a: 2}          set JSON value of foo.bar field of config
+  show package-name           show stat of package for current month (if it is)
+  show package-name 10.2016   show stat of package for 10.2016 (if it is)
+  help                        show this commands help
+update is a default command.`
+  );
+};
+
+/**
  * Update statistics for packages from config.
  * @param {string[]} args
  * @param {Object} config
@@ -221,13 +289,14 @@ COMMANDS[UPDATE] = (args, config) => {
  */
 const updatePackage = pack => {
 
-  const req = https
-    .get(`https://www.npmjs.com/package/${pack.name}`, getCallback);
+  const name = pack.name,
+        req = https
+          .get(`https://www.npmjs.com/package/${name}`, getCallback);
 
   req.on(`error`, logError)
      .setTimeout(TIMEOUT, () => {
        req.abort();
-       logError(`Request aborted by timeout (${TIMEOUT} ms).`);
+       logError(`Request to "${name}" aborted by timeout (${TIMEOUT} ms).`);
      });
 };
 
@@ -248,6 +317,12 @@ const getCallback = res => {
 };
 
 /**
+ * Get spent time (from run command) in seconds.
+ * @return {string}
+ */
+const getSpentTime = () => ((Date.now() - RUN_DATE)/1000).toFixed(3);
+
+/**
  * Callback for getting response data.
  * @param {string} source
  * @param {number} status
@@ -256,10 +331,14 @@ const updateCallback = (source, status) => {
 
   const pack = parseRes(source, status);
 
-  if (!pack.name) pack.name = NO_NAME;
+  if (pack.name) {
+    console.log(`Update "${pack.name}" (${getSpentTime()} sec).`);
+  } else {
+    pack.name = NO_NAME;
+  }
 
-  const dir = STATS + pack.name + '/',
-        statName = dir + getStatName();
+  const dir = `${STATS}${pack.name}/`,
+        statName = `${dir}${getStatName()}.json`;
 
   try {
     fs.accessSync(dir);
@@ -373,20 +452,7 @@ const parseRes = (source, status) => {
     }
   }
 
-  console.log(`Update "${pack.name}".`);
-
   return pack;
-};
-
-const getStatName = () => {
-
-  const now = new Date(),
-        year = now.getFullYear();
-
-  let month = now.getMonth() + 1;
-  if (month < 10) month = '0' + month;
-
-  return `${month}.${year}.json`;
 };
 
 /**
