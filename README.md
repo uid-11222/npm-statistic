@@ -82,6 +82,21 @@ $ npm-statistic show package-name 10.2016
 Show short help.
 
 ## Details ##
+Example of one package statistic snapshot:
+```js
+{ date: 1474151029433,
+  status: 200,
+  name: 'react',
+  version: '15.3.1',
+  release: 88,
+  deps: 3,
+  publisher: 'zpao',
+  pubDate: '2016-08-19T18:50:25.665Z',
+  day: 80366,
+  week: 469720,
+  month: 2056691 }
+```
+
 npm-statistic does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
 
 All errors are written to logs.txt in npm-statistic dir.

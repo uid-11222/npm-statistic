@@ -266,7 +266,7 @@ update is a default command.`
 };
 
 /**
- * Update statistics for packages from config.
+ * Update statistics for all packages from config.
  * @param {string[]} args
  * @param {Object} config
  * @param {Object} ctx Context of concrete npmStatistic call.
@@ -341,17 +341,17 @@ const getSpentTime = start => ((Date.now() - start)/1000).toFixed(3);
  */
 const updateCallback = (source, status, ctx) => {
 
-  const pack = parseRes(source, status);
+  const shot = parseRes(source, status);
 
-  if (pack.name) {
+  if (shot.name) {
     console.log(
-  `Update "${pack.name}" (${getSpentTime(ctx.start)} sec, ${--ctx.left} left).`
+  `Update "${shot.name}" (${getSpentTime(ctx.start)} sec, ${--ctx.left} left).`
     );
   } else {
-    pack.name = NO_NAME;
+    shot.name = NO_NAME;
   }
 
-  const dir = `${STATS}${pack.name}/`,
+  const dir = `${STATS}${shot.name}/`,
         statName = `${dir}${getStatName()}.json`;
 
   try {
@@ -363,21 +363,21 @@ const updateCallback = (source, status, ctx) => {
   try {
     fs.accessSync(statName);
   } catch(e) {
-    writeJSON(statName, { packages: [] });
+    writeJSON(statName, { shots: [] });
   }
 
   const stat = readJSON(statName),
-        packages = stat.packages,
-        len = packages.length,
-        last = packages[len - 1],
-        preLast = packages[len - 2],
+        shots = stat.shots,
+        len = shots.length,
+        last = shots[len - 1],
+        preLast = shots[len - 2],
         curDate = Date.now();
 
-  if (jsonsAreEqual(pack, last, `date`) &&
-      jsonsAreEqual(pack, preLast, `date`)) {
+  if (jsonsAreEqual(shot, last, `date`) &&
+      jsonsAreEqual(shot, preLast, `date`)) {
     last.date = curDate;
   } else {
-    packages.push(pack);
+    shots.push(shot);
   }
 
   writeJSON(statName, stat);
@@ -408,14 +408,14 @@ const jsonsAreEqual = (a, b, skip) => {
 };
 
 /**
- * Parse update response source to package object.
+ * Parse update response source to package statistic shot object.
  * @param {string} source
  * @param {number} status
- * @return {Object} Parsed package.
+ * @return {Object} Parse package statistic shot object.
  */
 const parseRes = (source, status) => {
 
-  const pack = { date: Date.now(), status };
+  const shot = { date: Date.now(), status };
 
   const packName = source.match(
           /\/package\/.+"/
@@ -431,30 +431,30 @@ const parseRes = (source, status) => {
         );
 
   if (!packName || !packName[0]) {
-    logError(pack.error = `${CANT} name.`);
-    return pack;
+    logError(shot.error = `${CANT} name.`);
+    return shot;
   }
 
-  pack.name = packName[0].slice(9, -1);
+  shot.name = packName[0].slice(9, -1);
 
   if (!packVer || packVer.length !== 3) {
     logError(`${CANT} version.`);
   } else {
-    pack.version = packVer[1];
-    pack.release = parseInt(packVer[2]);
+    shot.version = packVer[1];
+    shot.release = parseInt(packVer[2]);
   }
 
   if (!packDeps || packDeps.length !== 2) {
     logError(`${CANT} deps.`);
   } else {
-    pack.deps = parseInt(packDeps[1] || 0);
+    shot.deps = parseInt(packDeps[1] || 0);
   }
 
   if (!packPub || packPub.length !== 3) {
     logError(`${CANT} publisher.`);
   } else {
-    pack.publisher = packPub[1];
-    pack.pubDate = packPub[2];
+    shot.publisher = packPub[1];
+    shot.pubDate = packPub[2];
   }
 
   for (const item of PERIODS) {
@@ -462,11 +462,11 @@ const parseRes = (source, status) => {
     if (!res || res.length !== 2) {
       logError(`${CANT} ${item.period} stat.`);
     } else {
-      pack[item.period] = parseInt(res[1]);
+      shot[item.period] = parseInt(res[1]);
     }
   }
 
-  return pack;
+  return shot;
 };
 
 /**
