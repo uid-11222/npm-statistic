@@ -10,9 +10,18 @@ const UPDATE = `update`, SET = `set`, GET = `get`;
 
 const TIMEOUT = 8192;
 
-const CONFIG = `config.json`, STATS = `./stats/`;
+const CONFIG = `config.json`, LOGS = `logs.txt`, STATS = `./stats/`;
 
 const COMMANDS = {};
+
+const PERIODS = [`day`, `week`, `month`].map(period => ({
+        period, reg: RegExp(
+          (period === 'day' ? 'dai' : period) +
+          `ly-downloads[^\\d]+(\\d+)<\\/strong>`
+        )
+      }));
+
+const CANT = `Cannot find`;
 
 /**
  * Update stat, get/set config params.
@@ -27,7 +36,7 @@ const npmStatistic = module.exports = args => {
   try {
     fs.accessSync(CONFIG);
   } catch(e) {
-    console.log(`Cannot find config ("${CONFIG}"). Create new empty config.`);
+    console.log(`${CANT} config ("${CONFIG}"). Create new empty config.`);
     writeJSON(CONFIG, {});
   }
 
@@ -50,6 +59,26 @@ const npmStatistic = module.exports = args => {
   }
 
   COMMANDS[command](args, config);
+};
+
+
+/**
+ * Errors logger.
+ * @param {Error} error
+ */
+const logError = error => {
+
+  const data = `Got error: ${error}`;
+  console.log(data);
+
+  try {
+    fs.accessSync(LOGS);
+  } catch(e) {
+    console.log(`${CANT} logs ("${LOGS}"). Create new empty log file.`);
+    fs.writeFileSync(LOGS, '');
+  }
+
+  fs.writeSync(LOGS, data);
 };
 
 /**
@@ -90,7 +119,7 @@ const getJsonPart = (json, keys) => {
     }
   }
   return value;
-}
+};
 
 /**
  * Get config parts.
@@ -154,26 +183,17 @@ COMMANDS[UPDATE] = (args, config) => {
 };
 
 /**
- * Errors logger.
- * @param {Error} error
- */
-const logError = error => {
-  console.log(`Got error: ${error.message}`);
-};
-
-const timeOut = () => {
-  console.log(`Request close, timeout (${TIMEOUT} ms).`);
-};
-
-/**
  * Update statistic of package by name.
  * @param {string} name Package name.
  */
 const updatePackage = name => {
 
-  https.get(`https://www.npmjs.com/package/${name}`, getCallback)
-       .on(`error`, logError)
-       .setTimeout(TIMEOUT, timeOut);
+  const req = https.get(`https://www.npmjs.com/package/${name}`, getCallback);
+
+  req.on(`error`, logError).setTimeout(TIMEOUT, () => {
+    req.abort();
+    logError(`Request aborted by timeout (${TIMEOUT} ms).`);
+  });
 
 };
 
@@ -267,14 +287,44 @@ const parseRes = (source, status) => {
 
   const pack = { date: Date.now(), status };
 
-  const packName = source.match(/\/package\/.+"/);
+  const packName = source.match(
+          /\/package\/.+"/
+        ),
+        packVer = source.match(
+          /<strong>(\d.*?)<\/strong>[^\d]*is the latest[^\d]+(\d+)/
+        ),
+        packDeps = source.match(
+          /<h3>Dependencies\s*\(?(\d*)\)?<\/h3>/
+        );
 
   if (!packName || !packName[0]) {
-    logError(pack.error = `Cannot find name.`);
+    logError(pack.error = `${CANT} name.`);
     return pack;
   }
 
   pack.name = packName[0].slice(9, -1);
+
+  if (!packVer || packVer.length !== 3) {
+    logError(`${CANT} version.`);
+  } else {
+    pack.version = packVer[1];
+    pack.release = parseInt(packVer[2]);
+  }
+
+  if (!packDeps || packDeps.length !== 2) {
+    logError(`${CANT} deps.`);
+  } else {
+    pack.deps = parseInt(packDeps[1] || 0);
+  }
+
+  for (const item of PERIODS) {
+    const res = source.match(item.reg);
+    if (!res || res.length !== 2) {
+      logError(`${CANT} ${item.period} stat.`);
+    } else {
+      pack[item.period] = parseInt(res[1]);
+    }
+  }
 
   console.log(`Update "${pack.name}" statistic.`);
 
