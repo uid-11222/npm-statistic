@@ -1,8 +1,10 @@
 # npm-statistic #
 
-  [![NPM version][npm-image]][npm-url] ![node][node-image] ![dependencies][dependencies-image] [![License MIT][license-image]](LICENSE)
+[![NPM version][npm-image]][npm-url] ![node][node-image] ![dependencies][dependencies-image] [![License MIT][license-image]](LICENSE)
 
-  **npm-statistic** get npm stats for chosen packages and save to JSON. It's a console command for regularly invoke (by cron, for example).
+[![NPM](https://nodei.co/npm/npm-statistic.png)](https://nodei.co/npm/npm-statistic/)
+
+**npm-statistic** get npm stats for chosen packages and save to JSON. It's a console command for regularly invoke (by cron, for example).
 
 ## Usage ##
 You need a node version >=6.0.0. Install npm-statistic localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and stats/package-name/09.2016.json created automatically in npm-statistic dir).
