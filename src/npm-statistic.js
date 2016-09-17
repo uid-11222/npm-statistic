@@ -6,7 +6,7 @@ const fs = require('fs'),
       https = require('https'),
       util = require('util');
 
-const UPDATE = `update`, SET = `set`, GET = `get`;
+const UPDATE = `update`, SET = `set`, GET = `get`, ADD = `add`;
 
 const TIMEOUT = 8192;
 
@@ -21,7 +21,7 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
         )
       }));
 
-const CANT = `Cannot find`;
+const CANT = `Cannot find`, NO_NAME = `no-name-packages`;
 
 /**
  * Update stat, get/set config params.
@@ -167,34 +167,68 @@ COMMANDS[SET] = (args, config) => {
 };
 
 /**
+ * Add package name to config list.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[ADD] = (args, config) => {
+
+  if (args.length === 0) {
+    console.log(`Package name missed.`);
+    return;
+  }
+
+  const name = args[0];
+
+  if (!config.packages) config.packages = [];
+
+  const such = config.packages.filter(pack => pack.name === name);
+
+  if (such.length) {
+    console.log(`Suck package already added (${util.inspect(such[0])}).`);
+    return;
+  }
+
+  COMMANDS[SET](
+    [`packages.${config.packages.length}`, `{"name": "${name}"}`],
+    config
+  );
+};
+
+/**
  * Update statistics for packages from config.
  * @param {string[]} args
  * @param {Object} config
  */
 COMMANDS[UPDATE] = (args, config) => {
 
-  const packages = config.packages || [],
-        names = packages.map(pack => pack.name);
+  const packages = config.packages;
 
-  for (const name of names) {
-    updatePackage(name);
+  if (!packages || !packages.length) {
+    console.log(`No packages (${packages}).`);
+    return;
+  }
+
+  for (const pack of packages) {
+    updatePackage(pack);
   }
 
 };
 
 /**
  * Update statistic of package by name.
- * @param {string} name Package name.
+ * @param {Object} pack Package object.
  */
-const updatePackage = name => {
+const updatePackage = pack => {
 
-  const req = https.get(`https://www.npmjs.com/package/${name}`, getCallback);
+  const req = https
+    .get(`https://www.npmjs.com/package/${pack.name}`, getCallback);
 
-  req.on(`error`, logError).setTimeout(TIMEOUT, () => {
-    req.abort();
-    logError(`Request aborted by timeout (${TIMEOUT} ms).`);
-  });
-
+  req.on(`error`, logError)
+     .setTimeout(TIMEOUT, () => {
+       req.abort();
+       logError(`Request aborted by timeout (${TIMEOUT} ms).`);
+     });
 };
 
 /**
@@ -220,8 +254,11 @@ const getCallback = res => {
  */
 const updateCallback = (source, status) => {
 
-  const pack = parseRes(source, status),
-        dir = STATS + pack.name + '/',
+  const pack = parseRes(source, status);
+
+  if (!pack.name) pack.name = NO_NAME;
+
+  const dir = STATS + pack.name + '/',
         statName = dir + getStatName();
 
   try {
@@ -233,7 +270,7 @@ const updateCallback = (source, status) => {
   try {
     fs.accessSync(statName);
   } catch(e) {
-    writeJSON(statName, {packages: []});
+    writeJSON(statName, { packages: [] });
   }
 
   const stat = readJSON(statName),
@@ -295,6 +332,9 @@ const parseRes = (source, status) => {
         ),
         packDeps = source.match(
           /<h3>Dependencies\s*\(?(\d*)\)?<\/h3>/
+        ),
+        packPub = source.match(
+  /last-publisher[\s\S]+?<span>(.+?)<\/span>[\s\S]+?data-date="([^"]+)"/
         );
 
   if (!packName || !packName[0]) {
@@ -317,6 +357,13 @@ const parseRes = (source, status) => {
     pack.deps = parseInt(packDeps[1] || 0);
   }
 
+  if (!packPub || packPub.length !== 3) {
+    logError(`${CANT} publisher.`);
+  } else {
+    pack.publisher = packPub[1];
+    pack.pubDate = packPub[2];
+  }
+
   for (const item of PERIODS) {
     const res = source.match(item.reg);
     if (!res || res.length !== 2) {
@@ -326,7 +373,7 @@ const parseRes = (source, status) => {
     }
   }
 
-  console.log(`Update "${pack.name}" statistic.`);
+  console.log(`Update "${pack.name}".`);
 
   return pack;
 };
