@@ -28,7 +28,7 @@ $ npm-statistic
 ```
 
 ### get ###
-Get config (as JSON object) or his parts.
+Get config (as JSON object) or his parts.  
 Get full config:
 ```bash
 $ npm-statistic get
@@ -41,7 +41,7 @@ Get foo.bar field of config (as JSON object):
 ```bash
 $ npm-statistic get foo.bar
 ```
-For example, fiels "packages" contain array of all config packages:
+For example, field "packages" contain array of all config packages:
 ```bash
 $ npm-statistic get packages
 ```
@@ -51,7 +51,7 @@ $ npm-statistic get packages.0
 ```
 
 ### set ###
-Set config parts (as JSON object). Additional fields in the config file can be used to extend the functionality.
+Set config parts (as JSON object). Additional fields in the config file can be used to extend the functionality.  
 Set string value of foo field of config:
 ```bash
 $ npm-statistic set foo value
@@ -67,7 +67,7 @@ $ npm-statistic set timeout 8000
 Now timeout is 4 seconds.
 
 ### show ###
-Show month statistics of package by package name.
+Show month statistics of package by package name.  
 Show statistics of package for current month (if it is):
 ```bash
 $ npm-statistic show package-name

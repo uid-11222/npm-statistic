@@ -92,7 +92,7 @@ const writeJSON = (name, data) => {
 /**
  * Sync reading JSON from file.
  * @param  {string} name Filename.
- * @return {?Object} Parsed JSON value (null if no such file).
+ * @return {?Object} Parse JSON value (null if no such file).
  */
 const readJSON = name => {
   try {
@@ -199,7 +199,7 @@ COMMANDS[ADD] = (args, config) => {
   const such = config.packages.filter(pack => pack.name === name);
 
   if (such.length) {
-    console.log(`Suck package already added (${util.inspect(such[0])}).`);
+    console.log(`Such package already added (${util.inspect(such[0])}).`);
     return;
   }
 
