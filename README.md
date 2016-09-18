@@ -66,17 +66,49 @@ $ npm-statistic set timeout 4000
 ```
 Now timeout is 4 seconds.
 
+For deleting, for example, package #2 from config you can set it to null:
+```bash
+$ npm-statistic set packages.2 null
+```
+For temporary skipping package in statistic update you can set package field "skip" to true:
+```bash
+$ npm-statistic set packages.3.skip true
+```
+Now package statistics do not updated.
+```bash
+$ npm-statistic set packages.3.skip false
+```
+Package statistics updated again.
+
+For deleting last added package you can shorten the length of list of packages per one:
+```bash
+$ npm-statistic get packages.length
+14
+$ npm-statistic set packages.length 13
+```
+
 ### show ###
-Show full raw month statistics of package by package name.  
-Show statistics of package for current month (if it is):
+Show raw saved month statistics of package by package name.  
+Show full statistics of package for current month (if it is):
 ```bash
 $ npm-statistic show package-name
 ```
 
-Show statistics of package for custom month (if it is):
+Show full statistics of package for custom month (if it is):
 ```bash
 $ npm-statistic show package-name 10.2016
 ```
+
+Show last four statistic snapshots for custom month (if it is):
+```bash
+$ npm-statistic show -4 package-name 10.2016
+```
+
+Show last statistic snapshots for current month (if it is):
+```bash
+$ npm-statistic show -1 package-name
+```
+
 
 ### help ###
 Show short help.
@@ -98,6 +130,17 @@ Example of one package statistic snapshot:
   week: 469720,
   month: 2056691 }
 ```
+ - **date**: UTC date of snapshot
+ - **status**: HTTP status code of response
+ - **name**: package name
+ - **version**: current version of package
+ - **release**: number of release
+ - **deps**: number of package dependencies
+ - **publisher**: package publisher (name of NPM user)
+ - **pubDate**: date of publishing
+ - **day**: number of downloads in the last day
+ - **week**: number of downloads in the last week
+ - **month**: number of downloads in the last month
 
 npm-statistic does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
 

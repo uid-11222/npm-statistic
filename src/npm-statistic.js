@@ -61,12 +61,19 @@ const npmStatistic = module.exports = args => {
 
   const ctx = {
     start: Date.now(),
-    left: Number(config.packages && config.packages.length)
+    left: getActivePackages(config).length
   };
 
   COMMANDS[command](args, config, ctx);
 };
 
+/**
+ * Get list of active packages from config.
+ * @param  {Object} config
+ * @return {Object[]} List of packages for updating stats.
+ */
+const getActivePackages = config => config && config.packages ?
+  config.packages.filter(pack => pack && !pack.skip) : [];
 
 /**
  * Errors logger.
@@ -156,7 +163,7 @@ COMMANDS[GET] = (args, config) => {
 COMMANDS[SET] = (args, config) => {
 
   if (args.length < 2) {
-    console.log(`Not enough args.`);
+    console.log(`Not enough arguments.`);
     return;
   }
 
@@ -174,6 +181,7 @@ COMMANDS[SET] = (args, config) => {
     value = JSON.parse(args[1]);
   } catch(e) {
     value = args[1];
+    if (value === `undefined`) value = undefined;
   }
 
   obj[key] = value;
@@ -198,7 +206,7 @@ COMMANDS[ADD] = (args, config) => {
 
   if (!config.packages) config.packages = [];
 
-  const such = config.packages.filter(pack => pack.name === name);
+  const such = config.packages.filter(pack => pack && pack.name === name);
 
   if (such.length) {
     console.log(`Such package already added (${util.inspect(such[0])}).`);
@@ -222,6 +230,13 @@ COMMANDS[SHOW] = args => {
     return;
   }
 
+  let num = Number(args[0]) || 0;
+  if (args.length > 1 && String(num) === args[0]) {
+    args.shift();
+  } else {
+    num = 0;
+  }
+
   const name = args[0],
         dir = STATS + name + '/';
 
@@ -242,7 +257,9 @@ COMMANDS[SHOW] = args => {
     return;
   }
 
-  console.log(util.inspect(readJSON(statName)));
+  const shots = readJSON(statName).shots;
+
+  console.log(util.inspect(shots.slice(num)));
 
 };
 
@@ -275,10 +292,10 @@ update is a default command.`
  */
 COMMANDS[UPDATE] = (args, config, ctx) => {
 
-  const packages = config.packages;
+  const packages = getActivePackages(config);
 
-  if (!packages || !packages.length) {
-    console.log(`No packages (${packages}).`);
+  if (packages.length === 0) {
+    console.log(`No packages (${config.packages}).`);
     return;
   }
 
