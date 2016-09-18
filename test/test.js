@@ -30,6 +30,18 @@ describe('API', function() {
 
   });
 
+  it('throw without args array', function() {
+
+    try {
+      npmStatistic();
+    } catch(e) {
+      return;
+    }
+
+    assert(false);
+
+  });
+
 });
 
 });

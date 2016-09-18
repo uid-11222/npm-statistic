@@ -82,6 +82,8 @@ $ npm-statistic show package-name 10.2016
 Show short help.
 
 ## Details ##
+**Important**: if you update (reinstall) npm-statistic, config and accumulated statistics disappear (as they are stored in the installation directory). You can save config.json and stats/ in other dir before update, and move them to npm-statistic dir after update.
+
 Example of one package statistic snapshot:
 ```js
 { date: 1474151029433,
