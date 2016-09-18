@@ -24,6 +24,12 @@ describe('API', function() {
 
   });
 
+  it('works with empty args list', function() {
+
+    npmStatistic([]);
+
+  });
+
 });
 
 });

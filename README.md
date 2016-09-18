@@ -62,12 +62,12 @@ $ npm-statistic set foo.bar {a: 2}
 ```
 For example, field "timeout" contain response timeout in milliseconds (default timeout is 16382):
 ```bash
-$ npm-statistic set timeout 8000
+$ npm-statistic set timeout 4000
 ```
 Now timeout is 4 seconds.
 
 ### show ###
-Show month statistics of package by package name.  
+Show full raw month statistics of package by package name.  
 Show statistics of package for current month (if it is):
 ```bash
 $ npm-statistic show package-name
