@@ -7,7 +7,7 @@
 **npm-statistic** get npm stats for chosen packages and save to JSON files. It's a console command for regularly invoke (by cron, for example).
 
 ## Usage ##
-You need a node version >=6.0.0. Install npm-statistic localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in npm-statistic dir).
+You need a node version >=6.0.0. Install **npm-statistic** localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** dir).
 
 ## Commands ##
 
@@ -67,12 +67,26 @@ Set JSON value of foo.bar field of config:
 $ npm-statistic set foo.bar {a: 2}
 ```
 
-For example, field "timeout" contain response timeout in milliseconds (if there is no such field, default timeout is 32 * 1024):
+For example, field **timeout** contain response timeout in milliseconds (if there is no such field, default timeout is 32 * 1024):
 ```bash
 $ npm-statistic set timeout 4000
 ```
 
 Now timeout is 4 seconds.
+
+Field **open** contain maximum number of opened stats requests (if there is no such field, default value is 2). The higher the value, the faster will be updated packages statistics, but also the greater the likelihood of disconnection.
+```bash
+$ npm-statistic set open 4
+```
+
+Now **npm-statistic** will send four requests at a time.
+
+Field **retry** contain timeout (in milliseconds) between attempts to send stat request (if there is no such field, default value is 512).
+```bash
+$ npm-statistic set retry 100
+```
+
+Now when you run **update** command each package will check for available connections ten times per second.
 
 For deleting, for example, package #2 from config you can set it to null:
 ```bash
@@ -125,7 +139,7 @@ $ npm-statistic show -1 package-name
 Show short help.
 
 ## Details ##
-**Important**: if you update (reinstall) npm-statistic, config and accumulated statistics disappear (as they are stored in the installation directory). You can save config.json and stats/ in other dir before update, and move them to npm-statistic dir after update.
+**Important**: if you update (reinstall) **npm-statistic**, config and accumulated statistics disappear (as they are stored in the installation directory). You can save config.json and stats/ in other dir before update, and move them to **npm-statistic** dir after update.
 
 Example of one [package](https://www.npmjs.com/package/react) statistic snapshot:
 ```js
@@ -153,25 +167,23 @@ Example of one [package](https://www.npmjs.com/package/react) statistic snapshot
  - **week**: number of downloads in the last week
  - **month**: number of downloads in the last month
 
-npm-statistic does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
+**npm-statistic** does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
 
-All errors are written to logs.txt in npm-statistic dir.
+All errors are written to logs.txt in **npm-statistic** dir.
 
-You can run npm-statistic with any frequency, because if the package has not changed statistics, new records in the file does not occur (changes only the timestamp of the last update statistics). Therefore, the statistics file size is always limited by the number of changes in the statistics on package npm-page.
+You can run **npm-statistic** with any frequency, because if the package has not changed statistics, new records in the file does not occur (changes only the timestamp of the last update statistics). Therefore, the statistics file size is always limited by the number of changes in the statistics on package npm-page.
 
-If you add nonexistent package to config, npm-statistic saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
-
-Config field "open" contain maximum number of opened stats requests (if there is no such field, default value is 2). The higher the value, the faster will be updated packages statistics, but also the greater the likelihood of disconnection.  
-Config field "retry" contain timeout (in milliseconds) between attempts to send stat request (if there is no such field, default value is 512).
+If you add nonexistent package to config, **npm-statistic** saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
 
 ## Tests ##
+A full set of tests will be in a stable version.
 ```bash
 $ npm install
 $ npm test
 ```
 
 ## License ##
-  [MIT](LICENSE)
+[MIT](LICENSE)
 
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg "license-image"
 [dependencies-image]: https://img.shields.io/gemnasium/mathiasbynens/he.svg?maxAge=2592000 "dependencies-image"
