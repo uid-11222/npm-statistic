@@ -45,7 +45,7 @@ Get foo.bar field of config (as JSON object):
 $ npm-statistic get foo.bar
 ```
 
-For example, field "packages" contain array of all config packages:
+For example, field **packages** contain array of all config packages:
 ```bash
 $ npm-statistic get packages
 ```
@@ -88,12 +88,12 @@ $ npm-statistic set retry 100
 
 Now when you run **update** command each package will check for available connections ten times per second.
 
-For deleting, for example, package #2 from config you can set it to null:
+For deleting, for example, third package from config you can set it to null:
 ```bash
 $ npm-statistic set packages.2 null
 ```
 
-For temporary skipping package in statistic update you can set package field "skip" to true:
+For temporary skipping package in statistic update you can set package field **skip** to true:
 ```bash
 $ npm-statistic set packages.3.skip true
 ```
@@ -108,7 +108,7 @@ Package statistics updated again.
 For deleting last added package you can shorten the length of list of packages per one:
 ```bash
 $ npm-statistic get packages.length
-14
+ 14
 $ npm-statistic set packages.length 13
 ```
 
