@@ -143,26 +143,26 @@ Show short help.
 
 Example of one [package](https://www.npmjs.com/package/react) statistic snapshot:
 ```js
-{ date: 1474151029433,
+{ date: '2016-09-19T22:33:50.436Z',
   status: 200,
   name: 'react',
   version: '15.3.1',
   release: 88,
-  deps: 3,
+  dependencies: 3,
   publisher: 'zpao',
-  pubDate: '2016-08-19T18:50:25.665Z',
+  publishDate: '2016-08-19T18:50:25.665Z',
   day: 80366,
   week: 469720,
   month: 2056691 }
 ```
- - **date**: UTC date of snapshot
+ - **date**: date of snapshot
  - **status**: HTTP status code of response
  - **name**: package name
  - **version**: current version of package
  - **release**: number of releases
- - **deps**: number of package dependencies
+ - **dependencies**: number of package dependencies
  - **publisher**: package publisher (name of NPM user)
- - **pubDate**: date of publishing
+ - **publishDate**: date of publishing
  - **day**: number of downloads in the last day
  - **week**: number of downloads in the last week
  - **month**: number of downloads in the last month

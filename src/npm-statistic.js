@@ -13,7 +13,9 @@ const DEFAULT_TIMEOUT = 32 * 1024,
       MAX_OPENED_REQUESTS = 2,
       RETRY_TIMEOUT = 512;
 
-const CONFIG = `config.json`, LOGS = `logs.txt`, STATS = `./stats/`;
+const CONFIG = `${__dirname}/../config.json`,
+      LOGS = `${__dirname}/../logs.txt`,
+      STATS = `${__dirname}/../stats/`;
 
 const COMMANDS = {};
 
@@ -471,13 +473,13 @@ const jsonsAreEqual = (a, b, skip) => {
  */
 const parseRes = (source, status) => {
 
-  const shot = { date: Date.now(), status };
+  const shot = { date: util.inspect(new Date()), status };
 
   const packName = source.match(
           /\/package\/.+"/
         ),
         packVer = source.match(
-          /<strong>(\d.*?)<\/strong>[^\d]*is the latest[^\d]+(\d+)/
+  /<strong>(\d.*?)<\/strong>[^\d]*is the latest[^\d]+(\d*)[^\d]+release/
         ),
         packDeps = source.match(
           /<h3>Dependencies\s*\(?(\d*)\)?<\/h3>/
@@ -497,20 +499,20 @@ const parseRes = (source, status) => {
     logError(`${CANT} version.`);
   } else {
     shot.version = packVer[1];
-    shot.release = parseInt(packVer[2]);
+    shot.release = parseInt(packVer[2]) || 1;
   }
 
   if (!packDeps || packDeps.length !== 2) {
     logError(`${CANT} deps.`);
   } else {
-    shot.deps = parseInt(packDeps[1] || 0);
+    shot.dependencies = parseInt(packDeps[1]) || 0;
   }
 
   if (!packPub || packPub.length !== 3) {
     logError(`${CANT} publisher.`);
   } else {
     shot.publisher = packPub[1];
-    shot.pubDate = packPub[2];
+    shot.publishDate = packPub[2];
   }
 
   for (const item of PERIODS) {
@@ -518,7 +520,7 @@ const parseRes = (source, status) => {
     if (!res || res.length !== 2) {
       logError(`${CANT} ${item.period} stat.`);
     } else {
-      shot[item.period] = parseInt(res[1]);
+      shot[item.period] = parseInt(res[1]) || 0;
     }
   }
 
