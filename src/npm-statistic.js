@@ -9,7 +9,9 @@ const fs = require('fs'),
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, HELP = `help`;
 
-const DEFAULT_TIMEOUT = 16384;
+const DEFAULT_TIMEOUT = 32 * 1024,
+      MAX_OPENED_REQUESTS = 2,
+      RETRY_TIMEOUT = 512;
 
 const CONFIG = `config.json`, LOGS = `logs.txt`, STATS = `./stats/`;
 
@@ -61,7 +63,8 @@ const npmStatistic = module.exports = args => {
 
   const ctx = {
     start: Date.now(),
-    left: getActivePackages(config).length
+    left: getActivePackages(config).length,
+    open: 0
   };
 
   COMMANDS[command](args, config, ctx);
@@ -277,8 +280,10 @@ Commands:
   get foo.bar                 get foo.bar field of config (as JSON object)
   set foo value               set string value of foo field of config
   set foo.bar {a: 2}          set JSON value of foo.bar field of config
-  show package-name           show stat of package for current month (if it is)
-  show package-name 10.2016   show stat of package for 10.2016 (if it is)
+  show pack-name              show stat of package for current month (if it is)
+  show pack-name 10.2016      show stat of package for 10.2016 (if it is)
+  show -5 pack-name           show last 5 stat shots for current month
+  show -1 pack-name 10.2016   show last stat shots for 10.2016
   help                        show this commands help
 update is a default command.`
   );
@@ -299,8 +304,23 @@ COMMANDS[UPDATE] = (args, config, ctx) => {
     return;
   }
 
+  const retryTimeout = Number(config.retry) || RETRY_TIMEOUT,
+        maxOpen = Number(config.open) || MAX_OPENED_REQUESTS;
+
   for (const pack of packages) {
-    updatePackage(pack, config, ctx);
+
+    let count = 8 + Math.round((DEFAULT_TIMEOUT / RETRY_TIMEOUT) *
+        (packages.length / MAX_OPENED_REQUESTS));
+
+    const retry = () => {
+      if (ctx.open < maxOpen) {
+        updatePackage(pack, config, ctx);
+      } else {
+        if (--count > 0) setTimeout(retry, retryTimeout);
+      }
+    };
+
+    retry();
   }
 
 };
@@ -321,12 +341,26 @@ const updatePackage = (pack, config, ctx) => {
             res => getCallback(res, ctx)
           );
 
+  ++ctx.open;
+
   req.on(`error`, logError)
+     .on(`abort`  , () => --ctx.open)
+     .on(`aborted`, () => --ctx.open)
      .setTimeout(timeout, () => {
        req.abort();
-       logError(`Request to "${name}" aborted by timeout (${timeout} ms).`);
+       logError(
+        `Request to "${name}" aborted by timeout ` +
+        `(${timeout} ms); ${getCtxInfo(ctx)}.`
+       );
      });
 };
+
+/**
+ * Get context description.
+ * @param  {Object} ctx Current context.
+ * @return {string} Description string.
+ */
+const getCtxInfo = ctx => `open ${ctx.open}, left ${ctx.left}`;
 
 /**
  * Callback for getting update response.
@@ -341,6 +375,7 @@ const getCallback = (res, ctx) => {
 
   res.on(`data`, data => source += data)
      .on(`end`, () => {
+        --ctx.open;
         updateCallback(source, res.statusCode, ctx);
      });
 };
@@ -360,11 +395,13 @@ const getSpentTime = start => ((Date.now() - start)/1000).toFixed(3);
  */
 const updateCallback = (source, status, ctx) => {
 
+  --ctx.left;
   const shot = parseRes(source, status);
 
   if (shot.name) {
     console.log(
-  `Update "${shot.name}" (${getSpentTime(ctx.start)} sec, ${--ctx.left} left).`
+      `Update "${shot.name}" (${getSpentTime(ctx.start)}` +
+      ` sec, ${getCtxInfo(ctx)}).`
     );
   } else {
     shot.name = NO_NAME;
