@@ -7,7 +7,7 @@ const fs = require('fs'),
       util = require('util');
 
 const UPDATE = `update`, SET = `set`, GET = `get`,
-      ADD = `add`, SHOW = `show`, HELP = `help`;
+      ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
 
 const DEFAULT_TIMEOUT = 32 * 1024,
       MAX_OPENED_REQUESTS = 2,
@@ -268,6 +268,46 @@ COMMANDS[SHOW] = args => {
 
 };
 
+
+/**
+ * Show fields of last snapshots of all packages.
+ * @param {string[]} args
+ * @param {Object} config
+ */
+COMMANDS[LAST] = (args, config) => {
+
+  if (args.length === 0) {
+    args[0] = `day`;
+  }
+
+  const packages = config.packages || [];
+
+  let last = ``;
+
+  for (const pack of packages) {
+
+    const name = pack.name,
+          file = `${STATS}${name}/${getStatName()}.json`;
+
+    try {
+      fs.accessSync(file);
+    } catch(e) {
+      console.log(`No statistic for current month for package "${name}".`);
+      continue;
+    }
+
+    const shot = readJSON(file).shots.slice(-1)[0];
+
+    last += `${name}:`;
+    for (const field of args) {
+      last += ` ` + shot[field];
+    }
+    last += `\n`;
+
+  }
+  console.log(last.slice(0, -1));
+};
+
 /**
  * Show commands help.
  */
@@ -286,6 +326,9 @@ Commands:
   show pack-name 10.2016      show stat of package for 10.2016 (if it is)
   show -5 pack-name           show last 5 stat shots for current month
   show -1 pack-name 10.2016   show last stat shots for 10.2016
+  last                        show downloads in the last day for all packages
+  last week                   show downloads in the last week for all packages
+  last version day            show version and downloads in the last day
   help                        show this commands help
 update is a default command.`
   );
@@ -473,7 +516,10 @@ const jsonsAreEqual = (a, b, skip) => {
  */
 const parseRes = (source, status) => {
 
-  const shot = { date: util.inspect(new Date()), status };
+  const shot = {
+    date: util.inspect(new Date()),
+    httpStatus: status
+  };
 
   const packName = source.match(
           /\/package\/.+"/

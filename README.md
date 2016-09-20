@@ -17,13 +17,17 @@ Add package (by package name) to config for regular updating his statistics:
 $ npm-statistic add package-name
 ```
 
+For example, add [react](https://www.npmjs.com/package/react) package:
+```bash
+$ npm-statistic add react
+```
+
 ### update ###
 Default command. Update statistics for all packages from config. No arguments:
 ```bash
 $ npm-statistic update
 ```
-
-or 
+or
 ```bash
 $ npm-statistic
 ```
@@ -55,6 +59,11 @@ First package:
 $ npm-statistic get packages.0
 ```
 
+Third package:
+```bash
+$ npm-statistic get packages.2
+```
+
 ### set ###
 Set config parts (as JSON object). "packages" array in config contains all packages for which stats should be updated. Additional fields in the config file can be used to extend the functionality.  
 Set string value of foo field of config:
@@ -81,7 +90,7 @@ $ npm-statistic set open 4
 
 Now **npm-statistic** will send four requests at a time.
 
-Field **retry** contain timeout (in milliseconds) between attempts to send stat request (if there is no such field, default value is 512).
+Field **retry** contain timeout (in milliseconds) between attempts to send stat request (if there is no such field, default value is 512):
 ```bash
 $ npm-statistic set retry 100
 ```
@@ -134,6 +143,19 @@ Show last statistic snapshots for current month (if it is):
 $ npm-statistic show -1 package-name
 ```
 
+### last ###
+Show some fields of last statistic snapshots for all packages (**day** is the default field).  
+A list of fields separated by spaces:
+```bash
+$ npm-statistic last version week
+```
+It displays a list of all config packages with the latest versions and the number of downloads in the last week.
+
+```bash
+$ npm-statistic last month
+```
+It displays a list of all config packages with the number of downloads in the last month.  
+A list of all available fields is below.
 
 ### help ###
 Show short help.
@@ -144,7 +166,7 @@ Show short help.
 Example of one [package](https://www.npmjs.com/package/react) statistic snapshot:
 ```js
 { date: '2016-09-19T22:33:50.436Z',
-  status: 200,
+  httpStatus: 200,
   name: 'react',
   version: '15.3.1',
   release: 88,
@@ -156,7 +178,7 @@ Example of one [package](https://www.npmjs.com/package/react) statistic snapshot
   month: 2056691 }
 ```
  - **date**: date of snapshot
- - **status**: HTTP status code of response
+ - **httpStatus**: HTTP status code of response
  - **name**: package name
  - **version**: current version of package
  - **release**: number of releases
