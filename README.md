@@ -4,7 +4,9 @@
 
 [![NPM](https://nodei.co/npm/npm-statistic.png)](https://nodei.co/npm/npm-statistic/)
 
-**npm-statistic** get npm stats for chosen packages and save to JSON files. It's a console command for regularly invoke (by cron, for example).
+**npm-statistic** get npm download stats for chosen packages and save to JSON files.  
+It's a console command for regularly invoke (by cron, for example).  
+Package statistics taken from package's npm page.
 
 ## Usage ##
 You need a node version >=6.0.0. Install **npm-statistic** localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** dir).
@@ -39,12 +41,12 @@ Get full config:
 $ npm-statistic get
 ```
 
-Get foo field of config (as JSON object):
+Get *foo* field of config (as JSON object):
 ```bash
 $ npm-statistic get foo
 ```
 
-Get foo.bar field of config (as JSON object):
+Get *foo.bar* field of config (as JSON object):
 ```bash
 $ npm-statistic get foo.bar
 ```
@@ -66,12 +68,12 @@ $ npm-statistic get packages.2
 
 ### set ###
 Set config parts (as JSON object). "packages" array in config contains all packages for which stats should be updated. Additional fields in the config file can be used to extend the functionality.  
-Set string value of foo field of config:
+Set string value of *foo* field of config:
 ```bash
 $ npm-statistic set foo value
 ```
 
-Set JSON value of foo.bar field of config:
+Set JSON value of *foo.bar* field of config:
 ```bash
 $ npm-statistic set foo.bar {a: 2}
 ```

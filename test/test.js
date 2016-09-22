@@ -9,13 +9,18 @@ const CONFIG = `${__dirname}/../config.json`,
       LOGS = `${__dirname}/../logs.txt`,
       STATS = `${__dirname}/../stats/`,
       UNDEF = `undefined`,
-      SELF = `npm-statistic`;
+      SELF = `npm-statistic`,
+      MAIN = `src/${SELF}.js`;
 
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
 
+const ADDED = `already added`;
+
+const UPDATE_TIMEOUT = 32 * 1024;
+
 /**
- * Throw error, if value in not true.
+ * Throw error, if value is not true.
  * @param  {*} value
  * @param  {string} msg
  * @throws {Error}
@@ -35,18 +40,26 @@ const readJSON = name => {
   } catch(e) { return null; }
 };
 
+/**
+ * Throw error, if str is not contain all commands.
+ * @param  {string} Help text.
+ * @throws {Error}
+ */
+const assertHelp = str => {
+  assert(str.includes(SET));
+  assert(str.includes(GET));
+  assert(str.includes(ADD));
+  assert(str.includes(LAST));
+  assert(str.includes(HELP));
+  assert(str.includes(UPDATE));
+  assert(str.includes(SHOW));
+};
 
 describe('API', function() {
 
   it('exists', function() {
 
     assert(typeof npmStatistic === 'function');
-
-  });
-
-  it('works with empty args list', function() {
-
-    npmStatistic([]);
 
   });
 
@@ -510,6 +523,28 @@ describe(ADD, function() {
 
   });
 
+  it(`do not add ${ADDED} packages`, function() {
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(ADDED));
+        assert(str.includes(SELF));
+        ++called;
+      };
+
+      npmStatistic([ADD, SELF]);
+      assert(called === 1);
+
+    } finally {
+      console.log = log;
+    }
+
+  });
+
 });
 
 describe(HELP, function() {
@@ -522,13 +557,7 @@ describe(HELP, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(SET));
-        assert(str.includes(GET));
-        assert(str.includes(ADD));
-        assert(str.includes(LAST));
-        assert(str.includes(HELP));
-        assert(str.includes(UPDATE));
-        assert(str.includes(SHOW));
+        assertHelp(str);
         ++called;
       };
 
@@ -543,5 +572,138 @@ describe(HELP, function() {
 
 });
 
+describe(`FS`, function() {
+
+  it(`has ${LOGS}`, function() {
+    fs.accessSync(LOGS);
+  });
+
+  it(`has ${STATS}`, function() {
+    fs.accessSync(STATS);
+  });
+
+});
+
+describe('bash command', function() {
+
+  it(`exists as ${MAIN}`, function(done) {
+
+    execFile(MAIN, [HELP], done)
+      .stderr.on('data', data => assert(false, data));
+
+  });
+
+  it('set string value', function(done) {
+
+    const field = `__tmp_${Date.now()}`,
+          value = `foo`;
+
+    execFile(MAIN, [SET, field, value], () => {
+
+      const config = readJSON(CONFIG);
+
+      assert(config[field] === value);
+
+      execFile(MAIN, [SET, field, UNDEF], done);
+
+    }).stderr.on('data', data => assert(false, data));
+
+  });
+
+  it('get string value', function(done) {
+
+    const field = `__tmp_${Date.now()}`,
+          value = `foo`;
+
+    execFile(MAIN, [SET, field, value], () => {
+
+      let hasOut = false;
+      const exec = execFile(MAIN, [GET, field], error => {
+        assert(!error);
+        assert(hasOut);
+        execFile(MAIN, [SET, field, UNDEF], done)
+          .stderr.on('data', data => assert(false, data));
+      });
+
+      exec.stderr.on('data', data => assert(false, data));
+      exec.stdout.on('data', data => {
+        assert(data.includes(value));
+        assert(!hasOut);
+        hasOut = true;
+      });
+
+    }).stderr.on('data', data => assert(false, data));
+
+  });
+
+  it(`show ${HELP}`, function(done) {
+
+    let hasOut = false;
+    const exec = execFile(MAIN, [HELP], error => {
+      assert(!error);
+      assert(hasOut);
+      done();
+    });
+
+    exec.stderr.on('data', data => assert(false, data));
+    exec.stdout.on('data', data => {
+      assertHelp(data);
+      assert(!hasOut);
+      hasOut = true;
+    });
+
+  });
+
+  it(`do not add ${ADDED} package`, function(done) {
+
+    let hasOut = false;
+    const exec = execFile(MAIN, [ADD, SELF], error => {
+      assert(!error);
+      assert(hasOut);
+      done();
+    });
+
+    exec.stderr.on('data', data => assert(false, data));
+    exec.stdout.on('data', data => {
+      assert(data.includes(ADDED));
+      assert(!hasOut);
+      hasOut = true;
+    });
+
+  });
+
+  it(UPDATE, function(done) {
+
+    const exec = execFile(MAIN, [UPDATE], () => assert(false));
+
+    exec.stderr.on('data', data => assert(false, data));
+    exec.stdout.on('data', data => {
+      if (data.includes(`Update "${SELF}"`)) done();
+    });
+
+    this.timeout(UPDATE_TIMEOUT);
+
+  });
+
+  it(`${SHOW} stats`, function(done) {
+
+    let hasOut = false;
+    const exec = execFile(MAIN, [SHOW, SELF], error => {
+      assert(!error);
+      assert(hasOut);
+      done();
+    });
+
+    exec.stderr.on('data', data => assert(false, data));
+    exec.stdout.on('data', data => {
+      assert(data.includes(SELF));
+      assert(data.includes(`publishDate`));
+      assert(!hasOut);
+      hasOut = true;
+    });
+
+  });
+
+});
 
 });

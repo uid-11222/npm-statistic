@@ -487,12 +487,11 @@ const updateCallback = (source, status, ctx) => {
         shots = stat.shots,
         len = shots.length,
         last = shots[len - 1],
-        preLast = shots[len - 2],
-        curDate = Date.now();
+        preLast = shots[len - 2];
 
   if (jsonsAreEqual(shot, last, `date`) &&
       jsonsAreEqual(shot, preLast, `date`)) {
-    last.date = curDate;
+    last.date = util.inspect(new Date());
   } else {
     shots.push(shot);
   }
