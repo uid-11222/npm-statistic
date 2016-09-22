@@ -76,26 +76,29 @@ Set JSON value of foo.bar field of config:
 $ npm-statistic set foo.bar {a: 2}
 ```
 
-For example, field **timeout** contain response timeout in milliseconds (if there is no such field, default timeout is 32 * 1024):
+For example, field **timeout** contain response timeout in milliseconds (if there is no such field, default timeout is 16 * 1024):
 ```bash
 $ npm-statistic set timeout 4000
 ```
-
 Now timeout is 4 seconds.
 
 Field **open** contain maximum number of opened stats requests (if there is no such field, default value is 2). The higher the value, the faster will be updated packages statistics, but also the greater the likelihood of disconnection.
 ```bash
 $ npm-statistic set open 4
 ```
-
 Now **npm-statistic** will send four requests at a time.
 
 Field **retry** contain timeout (in milliseconds) between attempts to send stat request (if there is no such field, default value is 512):
 ```bash
 $ npm-statistic set retry 100
 ```
-
 Now when you run **update** command each package will check for available connections ten times per second.
+
+Field **attempts** contain number of stat requests attempts (each sended request is the one attempt). If there is no such field, default value is 4.
+```bash
+$ npm-statistic set attempts 2
+```
+Now if first request for some package will be aborted, **npm-statistic** send only one new request for this package.
 
 For deleting, for example, third package from config you can set it to null:
 ```bash
@@ -106,18 +109,16 @@ For temporary skipping package in statistic update you can set package field **s
 ```bash
 $ npm-statistic set packages.3.skip true
 ```
-
 Now package statistics do not updated.
 ```bash
 $ npm-statistic set packages.3.skip false
 ```
-
 Package statistics updated again.
 
 For deleting last added package you can shorten the length of list of packages per one:
 ```bash
 $ npm-statistic get packages.length
- 14
+  14
 $ npm-statistic set packages.length 13
 ```
 

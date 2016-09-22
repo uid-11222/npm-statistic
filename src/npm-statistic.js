@@ -9,7 +9,8 @@ const fs = require('fs'),
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
 
-const DEFAULT_TIMEOUT = 32 * 1024,
+const DEFAULT_TIMEOUT = 16 * 1024,
+      DEFAULT_ATTEMPTS = 4,
       MAX_OPENED_REQUESTS = 2,
       RETRY_TIMEOUT = 512;
 
@@ -29,7 +30,7 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
 const CANT = `Cannot find`, NO_NAME = `no-name-packages`;
 
 /**
- * Update stat, get/set config params.
+ * Update stat, get/set config params, show stat.
  * @param {string[]} args 
  */
 const npmStatistic = module.exports = args => {
@@ -66,6 +67,7 @@ const npmStatistic = module.exports = args => {
   const ctx = {
     start: Date.now(),
     left: getActivePackages(config).length,
+    attempts: {},
     open: 0
   };
 
@@ -386,17 +388,31 @@ const updatePackage = (pack, config, ctx) => {
             res => getCallback(res, ctx)
           );
 
+  if (!hasOwn.call(ctx.attempts, name)) {
+    ctx.attempts[name] = Number(config.attempts) || DEFAULT_ATTEMPTS;
+  }
+
   ++ctx.open;
 
   req.on(`error`, logError)
      .on(`abort`  , () => --ctx.open)
      .on(`aborted`, () => --ctx.open)
      .setTimeout(timeout, () => {
-       req.abort();
-       logError(
-        `Request to "${name}" aborted by timeout ` +
-        `(${timeout} ms); ${getCtxInfo(ctx)}.`
-       );
+        req.abort();
+
+        const message =
+          `Request to "${name}" aborted by timeout ` +
+          `(${timeout} ms); ${getCtxInfo(ctx)}.` +
+          (ctx.attempts[name]-- > 0 ?
+            `\nNew attempt (${ctx.attempts[name]} left).` :
+            `\nNo attempts left.`);
+
+        if (ctx.attempts[name] >= 0) {
+          console.log(message);
+          updatePackage(pack, config, ctx);
+        } else {
+          logError(message);
+        }
      });
 };
 

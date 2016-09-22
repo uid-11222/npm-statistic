@@ -8,10 +8,11 @@ const fs = require('fs'),
 const CONFIG = `${__dirname}/../config.json`,
       LOGS = `${__dirname}/../logs.txt`,
       STATS = `${__dirname}/../stats/`,
-      UNDEF = `undefined`;
+      UNDEF = `undefined`,
+      SELF = `npm-statistic`;
 
 const UPDATE = `update`, SET = `set`, GET = `get`,
-      ADD = `add`, SHOW = `show`, HELP = `help`;
+      ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
 
 /**
  * Throw error, if value in not true.
@@ -215,6 +216,33 @@ describe(SET, function() {
     assert(config[field][4] === value);
 
     npmStatistic([SET, field, UNDEF]);
+
+  });
+
+  it('show message after setting', function() {
+
+    const field = `__tmp_${Date.now()}`,
+          value = `foo`;
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(value));
+        ++called;
+      };
+
+      npmStatistic([SET, field, value]);
+      assert(called === 1);
+
+    } finally {
+
+      console.log = log;
+      npmStatistic([SET, field, UNDEF]);
+
+    }
 
   });
 
@@ -432,5 +460,88 @@ describe(GET, function() {
   });
 
 });
+
+describe(ADD, function() {
+
+  it('show error when package name missed', function() {
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(`miss`));
+        ++called;
+      };
+
+      npmStatistic([ADD]);
+      assert(called === 1);
+
+    } finally {
+      console.log = log;
+    }
+
+  });
+
+  it('add packages', function() {
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SELF));
+        ++called;
+      };
+
+      npmStatistic([ADD, SELF]);
+      assert(called === 1);
+
+      const config = readJSON(CONFIG);
+      assert(
+        config.packages.filter(pack => pack.name === SELF).length === 1
+      );
+
+    } finally {
+      console.log = log;
+    }
+
+  });
+
+});
+
+describe(HELP, function() {
+
+  it(`show help for all commands`, function() {
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SET));
+        assert(str.includes(GET));
+        assert(str.includes(ADD));
+        assert(str.includes(LAST));
+        assert(str.includes(HELP));
+        assert(str.includes(UPDATE));
+        assert(str.includes(SHOW));
+        ++called;
+      };
+
+      npmStatistic([HELP]);
+      assert(called === 1);
+
+    } finally {
+      console.log = log;
+    }
+
+  });
+
+});
+
 
 });
