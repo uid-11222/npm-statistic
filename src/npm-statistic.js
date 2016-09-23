@@ -15,8 +15,8 @@ const DEFAULT_TIMEOUT = 16 * 1024,
       RETRY_TIMEOUT = 512;
 
 const CONFIG = `${__dirname}/../config.json`,
-      LOGS = `${__dirname}/../logs.txt`,
-      STATS = `${__dirname}/../stats/`;
+      LOGS   = `${__dirname}/../logs.txt`,
+      STATS  = `${__dirname}/../stats/`;
 
 const COMMANDS = {};
 
@@ -27,7 +27,8 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
         )
       }));
 
-const CANT = `Cannot find`, NO_NAME = `no-name-packages`;
+const CANT = `Cannot find`, NO_NAME = `no-name-packages`,
+      CREATE = `Create new empty`;
 
 /**
  * Update stat, get/set config params, show stat.
@@ -42,7 +43,7 @@ const npmStatistic = module.exports = args => {
   try {
     fs.accessSync(CONFIG);
   } catch(e) {
-    console.log(`${CANT} config ("${CONFIG}"). Create new empty config.`);
+    console.log(`${CANT} config ("${CONFIG}"). ${CREATE} config.`);
     writeJSON(CONFIG, {});
   }
 
@@ -50,6 +51,12 @@ const npmStatistic = module.exports = args => {
     fs.accessSync(STATS);
   } catch(e) {
     fs.mkdirSync(STATS);
+  }
+
+  try {
+    fs.accessSync(LOGS);
+  } catch(e) {
+    log(`${CREATE} log file.`);
   }
 
   let config = readJSON(CONFIG);
@@ -83,12 +90,12 @@ const getActivePackages = config => config && config.packages ?
   config.packages.filter(pack => pack && !pack.skip) : [];
 
 /**
- * Errors logger.
- * @param {Error} error
+ * Common logger.
+ * @param {*}
  */
-const logError = error => {
+const log = msg => {
 
-  const data = `${error}`;
+  const data = `${msg}`;
   console.log(data);
 
   fs.appendFileSync(LOGS, `${new Date()}. ${data}\n`);
@@ -397,7 +404,7 @@ const updatePackage = (pack, config, ctx) => {
   let aborted = false;
 
   req.on(`error`, error => {
-        if (!aborted) logError(error);
+        if (!aborted) log(error);
       })
      .on(`abort`  , () => --ctx.open)
      .on(`aborted`, () => --ctx.open)
@@ -416,7 +423,7 @@ const updatePackage = (pack, config, ctx) => {
           console.log(message);
           updatePackage(pack, config, ctx);
         } else {
-          logError(message);
+          log(message);
         }
      });
 };
@@ -435,7 +442,7 @@ const getCtxInfo = ctx => `open ${ctx.open}, left ${ctx.left}`;
  */
 const getCallback = (res, ctx) => {
   res.setEncoding('utf8')
-     .on(`error`, logError);
+     .on(`error`, log);
 
   let source = '';
 
@@ -555,27 +562,27 @@ const parseRes = (source, status) => {
         );
 
   if (!packName || !packName[0]) {
-    logError(shot.error = `${CANT} name.`);
+    log(shot.error = `${CANT} name.`);
     return shot;
   }
 
   shot.name = packName[0].slice(9, -1);
 
   if (!packVer || packVer.length !== 3) {
-    logError(`${CANT} version.`);
+    log(`${CANT} version.`);
   } else {
     shot.version = packVer[1];
     shot.release = parseInt(packVer[2]) || 1;
   }
 
   if (!packDeps || packDeps.length !== 2) {
-    logError(`${CANT} deps.`);
+    log(`${CANT} deps.`);
   } else {
     shot.dependencies = parseInt(packDeps[1]) || 0;
   }
 
   if (!packPub || packPub.length !== 3) {
-    logError(`${CANT} publisher.`);
+    log(`${CANT} publisher.`);
   } else {
     shot.publisher = packPub[1];
     shot.publishDate = packPub[2];
@@ -584,7 +591,7 @@ const parseRes = (source, status) => {
   for (const item of PERIODS) {
     const res = source.match(item.reg);
     if (!res || res.length !== 2) {
-      logError(`${CANT} ${item.period} stat.`);
+      log(`${CANT} ${item.period} stat.`);
     } else {
       shot[item.period] = parseInt(res[1]) || 0;
     }

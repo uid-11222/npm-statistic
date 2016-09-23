@@ -725,7 +725,7 @@ describe('bash command', function() {
 
   it(UPDATE, function(done) {
 
-    const exec = execFile(MAIN, [UPDATE], () => assert(false));
+    const exec = execFile(MAIN, [UPDATE]);
 
     exec.stderr.on('data', data => assert(false, data));
     exec.stdout.on('data', data => {
