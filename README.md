@@ -10,7 +10,7 @@ Package statistics taken from package's npm page.
 
 ## Usage ##
 You need a node version >=6.0.0.  
-Install **npm-statistic** localy or global, then **add** some packages to config, and run **update** command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** dir):
+Install **npm-statistic** localy or global, then **add** some packages to config, and run **update** command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** directory):
 ```bash
 $ npm-statistic add express
 $ npm-statistic update
@@ -182,7 +182,7 @@ A list of all available fields is below.
 Show short help.
 
 ## Details ##
-**Important**: if you update (reinstall) **npm-statistic**, config and accumulated statistics disappear (as they are stored in the installation directory). You can save config.json and stats/ in other dir before update, and move them to **npm-statistic** dir after update.
+**Important**: if you update (reinstall) **npm-statistic**, config and accumulated statistics disappear (as they are stored in the installation directory). You can save config.json and stats/ in other directory before update, and move them to **npm-statistic** directory after update.
 
 Example of one [package](https://www.npmjs.com/package/react) statistic snapshot:
 ```js
@@ -212,7 +212,7 @@ Example of one [package](https://www.npmjs.com/package/react) statistic snapshot
 
 **npm-statistic** does all file system operations in synchronous mode (but statistics https-requests are asynchronous, of course).
 
-All errors are written to logs.txt in **npm-statistic** dir.
+All errors are written to logs.txt in **npm-statistic** directory.
 
 You can run **npm-statistic** with any frequency, because if the package has not changed statistics, new records in the file does not occur (changes only the timestamp of the last update statistics). Therefore, the statistics file size is always limited by the number of changes in the statistics on package npm-page.
 

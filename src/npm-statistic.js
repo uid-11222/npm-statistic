@@ -28,7 +28,7 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
       }));
 
 const CANT = `Cannot find`, NO_NAME = `no-name-packages`,
-      CREATE = `Create new empty`;
+      CREATE = `Create new empty`, NO_PACKAGES = `No active packages`;
 
 /**
  * Update stat, get/set config params, show stat.
@@ -289,7 +289,12 @@ COMMANDS[LAST] = (args, config) => {
     args[0] = `day`;
   }
 
-  const packages = config.packages || [];
+  const packages = getActivePackages(config);
+
+  if (packages.length === 0) {
+    console.log(`${NO_PACKAGES} (${config.packages}).`);
+    return;
+  }
 
   let last = ``;
 
@@ -354,7 +359,7 @@ COMMANDS[UPDATE] = (args, config, ctx) => {
   const packages = getActivePackages(config);
 
   if (packages.length === 0) {
-    console.log(`No packages (${config.packages}).`);
+    console.log(`${NO_PACKAGES} (${config.packages}).`);
     return;
   }
 
