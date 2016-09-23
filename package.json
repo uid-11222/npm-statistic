@@ -1,10 +1,13 @@
 {
   "name": "npm-statistic",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Get npm package statistic and save to JSON files.",
   "main": "src/npm-statistic.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha ./test/test.js"
+  },
+  "bin": {
+    "npm-statistic": "./src/npm-statistic.js"
   },
   "keywords": [
     "npm",
