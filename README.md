@@ -9,7 +9,25 @@ It's a console command for regularly invoke (by cron, for example).
 Package statistics taken from package's npm page.
 
 ## Usage ##
-You need a node version >=6.0.0. Install **npm-statistic** localy or global, then add some packages to config, and run update command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** dir).
+You need a node version >=6.0.0.  
+Install **npm-statistic** localy or global, then **add** some packages to config, and run **update** command for saving current packages stats (config.json and files like stats/package-name/09.2016.json created automatically in **npm-statistic** dir):
+```bash
+$ npm-statistic add express
+$ npm-statistic update
+$ npm-statistic show express
+```
+
+You can use **npm-statistic** programmatically:
+```js
+const npmStatistic = require('npm-statistic');
+
+/**
+ * @param {string[]} Args list.
+ */
+npmStatistic([`add`, 'express']);
+npmStatistic([`update`]); // or npmStatistic([]);
+npmStatistic([`show`, 'express']);
+```
 
 ## Commands ##
 
