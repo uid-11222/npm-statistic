@@ -88,7 +88,7 @@ const getActivePackages = config => config && config.packages ?
  */
 const logError = error => {
 
-  const data = `Got error. ${error}`;
+  const data = `${error}`;
   console.log(data);
 
   fs.appendFileSync(LOGS, `${new Date()}. ${data}\n`);
@@ -394,18 +394,23 @@ const updatePackage = (pack, config, ctx) => {
 
   ++ctx.open;
 
-  req.on(`error`, logError)
+  let aborted = false;
+
+  req.on(`error`, error => {
+        if (!aborted) logError(error);
+      })
      .on(`abort`  , () => --ctx.open)
      .on(`aborted`, () => --ctx.open)
      .setTimeout(timeout, () => {
+        aborted = true;
         req.abort();
 
         const message =
           `Request to "${name}" aborted by timeout ` +
           `(${timeout} ms); ${getCtxInfo(ctx)}.` +
           (ctx.attempts[name]-- > 0 ?
-            `\nNew attempt (${ctx.attempts[name]} left).` :
-            `\nNo attempts left.`);
+            `\nNew attempt (${ctx.attempts[name]} left).\n` :
+            `\nNo attempts left, so skip package "${name}".\n`);
 
         if (ctx.attempts[name] >= 0) {
           console.log(message);

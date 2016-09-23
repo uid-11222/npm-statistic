@@ -1,6 +1,6 @@
 {
   "name": "npm-statistic",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Get npm package statistic and save to JSON files.",
   "main": "src/npm-statistic.js",
   "scripts": {
@@ -11,7 +11,10 @@
     "api",
     "stat",
     "stats",
-    "statistic"
+    "statistic",
+    "statistics",
+    "download",
+    "downloads"
   ],
   "dependencies": {},
   "devDependencies": {

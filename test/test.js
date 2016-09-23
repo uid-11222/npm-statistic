@@ -15,7 +15,11 @@ const CONFIG = `${__dirname}/../config.json`,
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
 
-const ADDED = `already added`;
+const ADDED = `already added`,
+      NOT_A_COMMAND = `NOT_A_COMMAND`,
+      NOT_A_PACKAGE = `NOT_A_PACKAGE`,
+      PUB = `publishDate`,
+      SELF_OUT = `${SELF}: `;
 
 const UPDATE_TIMEOUT = 32 * 1024;
 
@@ -65,7 +69,7 @@ describe('API', function() {
 
   it('works with array of string args', function() {
 
-    npmStatistic([`abc`, `def`]);
+    npmStatistic([NOT_A_COMMAND, `foo`]);
 
   });
 
@@ -90,6 +94,34 @@ describe('API', function() {
     }
 
     assert(false);
+
+  });
+
+  it(`get error with unknown command`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.error = str => {
+        assert(str.includes(NOT_A_COMMAND));
+        assert(str.includes(`Unknown`));
+        ++called;
+      };
+
+      console.log = () => assert(false);
+
+      npmStatistic([NOT_A_COMMAND]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
 
   });
 
@@ -593,6 +625,25 @@ describe('bash command', function() {
 
   });
 
+  it(`get error with unknown command`, function(done) {
+
+    let hasOut = false;
+    const exec = execFile(MAIN, [NOT_A_COMMAND], error => {
+      assert(!error);
+      assert(hasOut);
+      done();
+    });
+
+    exec.stdout.on('data', data => assert(false, data));
+    exec.stderr.on('data', data => {
+      assert(data.includes(`Unknown`));
+      assert(data.includes(NOT_A_COMMAND));
+      assert(!hasOut);
+      hasOut = true;
+    });
+
+  });
+
   it('set string value', function(done) {
 
     const field = `__tmp_${Date.now()}`,
@@ -697,10 +748,175 @@ describe('bash command', function() {
     exec.stderr.on('data', data => assert(false, data));
     exec.stdout.on('data', data => {
       assert(data.includes(SELF));
-      assert(data.includes(`publishDate`));
+      assert(data.includes(PUB));
       assert(!hasOut);
       hasOut = true;
     });
+
+  });
+
+  it(`show ${LAST} packages stats`, function(done) {
+
+    let hasOut = false;
+    const exec = execFile(MAIN, [LAST], error => {
+      assert(!error);
+      assert(hasOut);
+      done();
+    });
+
+    exec.stderr.on('data', data => assert(false, data));
+    exec.stdout.on('data', data => {
+      assert(data.includes(SELF_OUT));
+      assert(!hasOut);
+      hasOut = true;
+    });
+
+  });
+
+});
+
+describe(SHOW, function() {
+
+  it(`${SHOW} stats`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SELF));
+        assert(str.includes(PUB));
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([SHOW, SELF]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+  it(`${SHOW} sliced stats`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SELF), str);
+        assert(str.includes(PUB), str);
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([SHOW, `-1`, SELF]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+  it(`do not ${SHOW} stats for nonexistent package`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(NOT_A_PACKAGE), str);
+        assert(str.includes(`No statistic`), str);
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([SHOW, NOT_A_PACKAGE]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+});
+
+describe(LAST, function() {
+
+  it(`show ${LAST} stats`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SELF_OUT));
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([LAST]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+  it(`show ${LAST} stats with several fields`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(str.includes(SELF_OUT));
+        assert(str.includes(UNDEF));
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([LAST, `day`, `week`, NOT_A_COMMAND]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
 
   });
 

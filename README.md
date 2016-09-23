@@ -4,7 +4,7 @@
 
 [![NPM](https://nodei.co/npm/npm-statistic.png)](https://nodei.co/npm/npm-statistic/)
 
-**npm-statistic** get npm download stats for chosen packages and save to JSON files.  
+**npm-statistic** get npm download stats for chosen packages and save it to JSON files.  
 It's a console command for regularly invoke (by cron, for example).  
 Package statistics taken from package's npm page.
 
@@ -67,7 +67,7 @@ $ npm-statistic get packages.2
 ```
 
 ### set ###
-Set config parts (as JSON object). "packages" array in config contains all packages for which stats should be updated. Additional fields in the config file can be used to extend the functionality.  
+Set config parts (as JSON object); "packages" array in config contains all packages for which stats should be updated. Additional fields in the config file can be used to extend the functionality.  
 Set string value of *foo* field of config:
 ```bash
 $ npm-statistic set foo value
@@ -201,7 +201,7 @@ You can run **npm-statistic** with any frequency, because if the package has not
 If you add nonexistent package to config, **npm-statistic** saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
 
 ## Tests ##
-A full set of tests will be in a stable version.
+42 Mocha tests:
 ```bash
 $ npm install
 $ npm test
