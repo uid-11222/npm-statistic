@@ -6,8 +6,12 @@ const fs = require('fs'),
       https = require('https'),
       util = require('util');
 
+/**
+ * Commands.
+ */
 const UPDATE = `update`, SET = `set`, GET = `get`,
-      ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
+      ADD = `add`, SHOW = `show`, LAST = `last`,
+      HELP = `help`, LOGS = `logs`;
 
 const DEFAULT_TIMEOUT = 16 * 1024,
       DEFAULT_ATTEMPTS = 4,
@@ -15,8 +19,8 @@ const DEFAULT_TIMEOUT = 16 * 1024,
       RETRY_TIMEOUT = 512;
 
 const CONFIG = `${__dirname}/../config.json`,
-      LOGS   = `${__dirname}/../logs.txt`,
-      STATS  = `${__dirname}/../stats/`;
+      LOGS_FILE = `${__dirname}/../${LOGS}.txt`,
+      STATS = `${__dirname}/../stats/`;
 
 const COMMANDS = {};
 
@@ -28,7 +32,8 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
       }));
 
 const CANT = `Cannot find`, NO_NAME = `no-name-packages`,
-      CREATE = `Create new empty`, NO_PACKAGES = `No active packages`;
+      CREATE = `Create new empty`, NO_PACKAGES = `No active packages`,
+      LOGS_SEPARATOR = `\n\n`;
 
 /**
  * Update stat, get/set config params, show stat.
@@ -54,7 +59,7 @@ const npmStatistic = module.exports = args => {
   }
 
   try {
-    fs.accessSync(LOGS);
+    fs.accessSync(LOGS_FILE);
   } catch(e) {
     log(`${CREATE} log file.`);
   }
@@ -98,7 +103,7 @@ const log = msg => {
   const data = `${msg}`;
   console.log(data);
 
-  fs.appendFileSync(LOGS, `${new Date()}. ${data}\n`);
+  fs.appendFileSync(LOGS_FILE, `${new Date()}. ${data}\n`);
 };
 
 /**
@@ -343,9 +348,26 @@ Commands:
   last                        show downloads in the last day for all packages
   last week                   show downloads in the last week for all packages
   last version day            show version and downloads in the last day
+  logs                        show all logs (like "cat logs.txt")
+  logs -4                     show last 4 log message (like "tail -4 logs.txt")
   help                        show this commands help
 update is a default command.`
   );
+};
+
+/**
+ * Show last n logs: npm-statistic logs -n
+ * @param {string[]} args
+ */
+COMMANDS[LOGS] = args => {
+
+  const n = Number(args[0]) || 0,
+        text = fs.readFileSync(LOGS_FILE, 'utf8'),
+        messages = text.split(LOGS_SEPARATOR)
+          .filter(str => str.replace(/^\s+$/, ``));
+
+  console.log(messages.slice(n).join(LOGS_SEPARATOR));
+
 };
 
 /**

@@ -6,14 +6,18 @@ const fs = require('fs'),
       npmStatistic = require('../src/npm-statistic');
 
 const CONFIG = `${__dirname}/../config.json`,
-      LOGS = `${__dirname}/../logs.txt`,
+      LOGS_FILE = `${__dirname}/../logs.txt`,
       STATS = `${__dirname}/../stats/`,
       UNDEF = `undefined`,
       SELF = `npm-statistic`,
       MAIN = `src/${SELF}.js`;
 
+/**
+ * Commands.
+ */
 const UPDATE = `update`, SET = `set`, GET = `get`,
-      ADD = `add`, SHOW = `show`, LAST = `last`, HELP = `help`;
+      ADD = `add`, SHOW = `show`, LAST = `last`,
+      HELP = `help`, LOGS = `logs`;
 
 const ADDED = `already added`,
       NOT_A_COMMAND = `NOT_A_COMMAND`,
@@ -606,8 +610,8 @@ describe(HELP, function() {
 
 describe(`FS`, function() {
 
-  it(`has ${LOGS}`, function() {
-    fs.accessSync(LOGS);
+  it(`has ${LOGS_FILE}`, function() {
+    fs.accessSync(LOGS_FILE);
   });
 
   it(`has ${STATS}`, function() {
@@ -921,5 +925,64 @@ describe(LAST, function() {
   });
 
 });
+
+describe(LOGS, function() {
+
+  it(`show ${LOGS}`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(typeof str === `string`);
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([LOGS]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+  it(`show ${LOGS} with number`, function() {
+
+    const error = console.error;
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        assert(typeof str === `string`);
+        ++called;
+      };
+
+      console.error = () => assert(false);
+
+      npmStatistic([LOGS, `-2`]);
+      assert(called === 1);
+
+    } finally {
+
+      console.error = error;
+      console.log = log;
+
+    }
+
+  });
+
+});
+
 
 });

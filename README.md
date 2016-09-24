@@ -178,6 +178,18 @@ $ npm-statistic last month
 It displays a list of all config packages with the number of downloads in the last month.  
 A list of all available fields is below.
 
+### logs ###
+Show last log messages.  
+All messages (like *cat logs.txt*):
+```bash
+$ npm-statistic logs
+```
+
+Last three messages (like *tail -3 logs.txt*, but messages could be multiline):
+```bash
+$ npm-statistic logs -3
+```
+
 ### help ###
 Show short help.
 
