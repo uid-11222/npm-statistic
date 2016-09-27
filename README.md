@@ -190,6 +190,9 @@ Last three messages (like *tail -3 logs.txt*, but messages could be multiline):
 $ npm-statistic logs -3
 ```
 
+### version ###
+Show version of **npm-statistic**.
+
 ### help ###
 Show short help.
 
@@ -231,7 +234,7 @@ You can run **npm-statistic** with any frequency, because if the package has not
 If you add nonexistent package to config, **npm-statistic** saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
 
 ## Tests ##
-44 Mocha tests:
+45 Mocha tests:
 ```bash
 $ npm install
 $ npm test

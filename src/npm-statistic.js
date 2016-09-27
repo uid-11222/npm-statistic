@@ -12,7 +12,7 @@ const fs = require('fs'),
  */
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, LAST = `last`,
-      HELP = `help`, LOGS = `logs`;
+      HELP = `help`, LOGS = `logs`, VERSION = `version`;
 
 const DEFAULT_TIMEOUT = 16 * 1024,
       DEFAULT_ATTEMPTS = 4,
@@ -21,6 +21,7 @@ const DEFAULT_TIMEOUT = 16 * 1024,
 
 const CONFIG = path.join(__dirname, `..`, `config.json`),
       LOGS_FILE = path.join(__dirname, `..`, `logs.txt`),
+      PACK = path.join(__dirname, `..`, `package.json`),
       STATS = path.join(__dirname, `..`, `stats`);
 
 const COMMANDS = {};
@@ -34,7 +35,7 @@ const PERIODS = [`day`, `week`, `month`].map(period => ({
 
 const CANT = `Cannot find`, NO_NAME = `no-name-packages`,
       CREATE = `Create new empty`, NO_PACKAGES = `No active packages`,
-      LOGS_SEPARATOR = `\n\n`;
+      LOGS_SEPARATOR = `\n\n`, SELF = `npm-statistic`;
 
 /**
  * Update stat, get/set config params, show stat.
@@ -333,7 +334,7 @@ COMMANDS[LAST] = (args, config) => {
  */
 COMMANDS[HELP] = () => {
   console.log(
-`npm-statistic get npm statistics for chosen packages and save to JSON.
+`${SELF} get npm statistics for chosen packages and save to JSON.
 Commands:
   add package-name            add package to config for regular getting stats
   update                      update statistics for all packages from config
@@ -351,9 +352,21 @@ Commands:
   last version day            show version and downloads in the last day
   logs                        show all logs (like "cat logs.txt")
   logs -4                     show last 4 log message (like "tail -4 logs.txt")
+  version                     show ${SELF} version
   help                        show this commands help
 update is a default command.`
   );
+};
+
+/**
+ * Show version.
+ */
+COMMANDS[VERSION] = () => {
+
+  const version = readJSON(PACK).version;
+
+  console.log(`${SELF} ${VERSION} ${version}`);
+
 };
 
 /**

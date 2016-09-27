@@ -19,7 +19,7 @@ const CONFIG = path.join(__dirname, `..`, `config.json`),
  */
 const UPDATE = `update`, SET = `set`, GET = `get`,
       ADD = `add`, SHOW = `show`, LAST = `last`,
-      HELP = `help`, LOGS = `logs`;
+      HELP = `help`, LOGS = `logs`, VERSION = `version`;
 
 const ADDED = `already added`,
       NOT_A_COMMAND = `NOT_A_COMMAND`,
@@ -603,6 +603,36 @@ describe(HELP, function() {
       };
 
       npmStatistic([HELP]);
+      assert(called === 1);
+
+    } finally {
+      console.log = log;
+    }
+
+  });
+
+});
+
+
+describe(VERSION, function() {
+
+  it(`show version`, function() {
+
+    const log = console.log;
+    let called = 0;
+
+    try {
+
+      console.log = str => {
+        str = inspect(str);
+        assert(str.includes(SELF));
+        assert(str.includes(VERSION));
+        assert(str.includes(`.`));
+        assert(Array.isArray(str.match(/\d/)));
+        ++called;
+      };
+
+      npmStatistic([VERSION]);
       assert(called === 1);
 
     } finally {
