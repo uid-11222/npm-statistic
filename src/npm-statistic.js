@@ -4,6 +4,7 @@
 
 const fs = require('fs'),
       https = require('https'),
+      path = require('path'),
       util = require('util');
 
 /**
@@ -18,9 +19,9 @@ const DEFAULT_TIMEOUT = 16 * 1024,
       MAX_OPENED_REQUESTS = 2,
       RETRY_TIMEOUT = 512;
 
-const CONFIG = `${__dirname}/../config.json`,
-      LOGS_FILE = `${__dirname}/../${LOGS}.txt`,
-      STATS = `${__dirname}/../stats/`;
+const CONFIG = path.join(__dirname, `..`, `config.json`),
+      LOGS_FILE = path.join(__dirname, `..`, `logs.txt`),
+      STATS = path.join(__dirname, `..`, `stats`);
 
 const COMMANDS = {};
 
@@ -71,7 +72,7 @@ const npmStatistic = module.exports = args => {
     return;
   }
 
-  if (!COMMANDS.hasOwnProperty(command)) {
+  if (!hasOwn.call(COMMANDS, command)) {
     console.error(`Unknown command: "${command}".`);
     return;
   }
@@ -126,7 +127,7 @@ const readJSON = name => {
   } catch(e) { return null; }
 };
 
-const hasOwn = COMMANDS.hasOwnProperty;
+const hasOwn = ({}).hasOwnProperty;
 
 /**
  * Get JSON part by keys array.
@@ -170,7 +171,7 @@ COMMANDS[GET] = (args, config) => {
 
   const keys = args[0] === undefined ? [] : args[0].split('.');
 
-  console.log(util.inspect(getJsonPart(config, keys)));
+  console.log(getJsonPart(config, keys));
 
 };
 
@@ -257,7 +258,7 @@ COMMANDS[SHOW] = args => {
   }
 
   const name = args[0],
-        dir = STATS + name + '/';
+        dir = path.join(STATS, name);
 
   try {
     fs.accessSync(dir);
@@ -267,18 +268,18 @@ COMMANDS[SHOW] = args => {
   }
 
   const month = args[1] ? args[1] : getStatName(),
-        statName = `${dir}${month}.json`;
+        statName = path.join(dir, `${month}.json`);
 
   try {
     fs.accessSync(statName);
   } catch(e) {
-    console.log(`No statistic for month ${month} for package "${name}".`);
+    console.log(`No statistic for month "${month}" for package "${name}".`);
     return;
   }
 
   const shots = readJSON(statName).shots;
 
-  console.log(util.inspect(shots.slice(num)));
+  console.log(shots.slice(num));
 
 };
 
@@ -306,7 +307,7 @@ COMMANDS[LAST] = (args, config) => {
   for (const pack of packages) {
 
     const name = pack.name,
-          file = `${STATS}${name}/${getStatName()}.json`;
+          file = path.join(STATS, name, `${getStatName()}.json`);
 
     try {
       fs.accessSync(file);
@@ -507,8 +508,8 @@ const updateCallback = (source, status, ctx) => {
     shot.name = NO_NAME;
   }
 
-  const dir = `${STATS}${shot.name}/`,
-        statName = `${dir}${getStatName()}.json`;
+  const dir = path.join(STATS, shot.name),
+        statName = path.join(dir, `${getStatName()}.json`);
 
   try {
     fs.accessSync(dir);

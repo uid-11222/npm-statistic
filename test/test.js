@@ -3,11 +3,13 @@ describe('npm-statistic', function() {
 
 const fs = require('fs'),
       execFile = require('child_process').execFile,
+      inspect = require('util').inspect,
+      path = require('path'),
       npmStatistic = require('../src/npm-statistic');
 
-const CONFIG = `${__dirname}/../config.json`,
-      LOGS_FILE = `${__dirname}/../logs.txt`,
-      STATS = `${__dirname}/../stats/`,
+const CONFIG = path.join(__dirname, `..`, `config.json`),
+      LOGS_FILE = path.join(__dirname, `..`, `logs.txt`),
+      STATS = path.join(__dirname, `..`, `stats`),
       UNDEF = `undefined`,
       SELF = `npm-statistic`,
       MAIN = `src/${SELF}.js`;
@@ -279,7 +281,7 @@ describe(SET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(value));
+        assert(inspect(str).includes(value));
         ++called;
       };
 
@@ -312,7 +314,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(value));
+        assert(inspect(str).includes(value));
         ++called;
       };
 
@@ -341,7 +343,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(value));
+        assert(inspect(str).includes(value));
         ++called;
       };
 
@@ -370,7 +372,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(value));
+        assert(inspect(str).includes(value));
         ++called;
       };
 
@@ -399,6 +401,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(`foo`));
         assert(str.includes(`bar`));
         assert(str.includes(`{`));
@@ -431,6 +434,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(`foo`));
         assert(str.includes(`bar`));
         assert(str.includes(`[`));
@@ -463,7 +467,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(`bar`));
+        assert(inspect(str).includes(`bar`));
         ++called;
       };
 
@@ -492,7 +496,7 @@ describe(GET, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(`bar`));
+        assert(inspect(str).includes(`bar`));
         ++called;
       };
 
@@ -520,7 +524,7 @@ describe(ADD, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(`miss`));
+        assert(inspect(str).includes(`miss`));
         ++called;
       };
 
@@ -541,7 +545,7 @@ describe(ADD, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(SELF));
+        assert(inspect(str).includes(SELF));
         ++called;
       };
 
@@ -567,6 +571,7 @@ describe(ADD, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(ADDED));
         assert(str.includes(SELF));
         ++called;
@@ -593,7 +598,7 @@ describe(HELP, function() {
     try {
 
       console.log = str => {
-        assertHelp(str);
+        assertHelp(inspect(str));
         ++called;
       };
 
@@ -790,6 +795,7 @@ describe(SHOW, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(SELF));
         assert(str.includes(PUB));
         ++called;
@@ -818,6 +824,7 @@ describe(SHOW, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(SELF), str);
         assert(str.includes(PUB), str);
         ++called;
@@ -846,6 +853,7 @@ describe(SHOW, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(NOT_A_PACKAGE), str);
         assert(str.includes(`No statistic`), str);
         ++called;
@@ -878,7 +886,7 @@ describe(LAST, function() {
     try {
 
       console.log = str => {
-        assert(str.includes(SELF_OUT));
+        assert(inspect(str).includes(SELF_OUT));
         ++called;
       };
 
@@ -905,6 +913,7 @@ describe(LAST, function() {
     try {
 
       console.log = str => {
+        str = inspect(str);
         assert(str.includes(SELF_OUT));
         assert(str.includes(UNDEF));
         ++called;

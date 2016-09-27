@@ -231,7 +231,7 @@ You can run **npm-statistic** with any frequency, because if the package has not
 If you add nonexistent package to config, **npm-statistic** saves "stats" for this package, but with response status 404 (it is convenient to store the statuses 500, 503 and so on, when www.npmjs.com works with problems).
 
 ## Tests ##
-42 Mocha tests:
+44 Mocha tests:
 ```bash
 $ npm install
 $ npm test
